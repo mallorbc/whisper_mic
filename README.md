@@ -40,7 +40,7 @@ sudo apt install portaudio19-dev python3-pyaudio
 
 The code and the model weights of Whisper are released under the MIT License. See their repo for more information.
 
-The code under this repo is under the AGPL license.  See See [LICENSE](LICENSE) for further details.
+The code under this repo is under the AGPL license.  See [LICENSE](LICENSE) for further details.
 
 ## Thanks
 Until recently, access to high performing speech to text models was only available through paid serviecs.  With this release, I am excited for the many applications that will come.
