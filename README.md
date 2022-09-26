@@ -1,6 +1,10 @@
 # Whisper Mic
 This repo is based on the work done [here](https://github.com/openai/whisper) by OpenAI.  This repo allows you use use a mic as demo. This repo copies some of the README from original project.
 
+## Video Tutorial
+
+See the video tutorial for this repo [here](https://www.youtube.com/watch?v=nwPaRSlDSaY)
+
 ## Setup
 
 1. Create a venv of your choice.
