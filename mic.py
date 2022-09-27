@@ -39,7 +39,11 @@ def main(model, english,verbose, energy, pause,dynamic_energy):
             audio_clip = AudioSegment.from_file(data)
             audio_clip.export(save_path, format="wav")
 
-            result = audio_model.transcribe(save_path)
+            if english:
+                result = audio_model.transcribe(save_path,language='english')
+            else:
+                result = audio_model.transcribe(save_path)
+
             if not verbose:
                 predicted_text = result["text"]
                 print("You said: " + predicted_text)
