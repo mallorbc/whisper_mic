@@ -5,11 +5,8 @@ import whisper
 import tempfile
 import os
 import click
-
-
-temp_dir = tempfile.mkdtemp()
-save_path = os.path.join(temp_dir, "temp.wav")
-
+import torch
+import numpy as np
 
 @click.command()
 @click.option("--model", default="base", help="Model to use", type=click.Choice(["tiny","base", "small","medium","large"]))
@@ -35,14 +32,12 @@ def main(model, english,verbose, energy, pause,dynamic_energy):
         while True:
             #get and save audio to wav file
             audio = r.listen(source)
-            data = io.BytesIO(audio.get_wav_data())
-            audio_clip = AudioSegment.from_file(data)
-            audio_clip.export(save_path, format="wav")
+            torch_audio = torch.from_numpy(np.frombuffer(audio.get_raw_data(), np.int16).flatten().astype(np.float32) / 32768.0)
 
             if english:
-                result = audio_model.transcribe(save_path,language='english')
+                result = audio_model.transcribe(torch_audio,language='english')
             else:
-                result = audio_model.transcribe(save_path)
+                result = audio_model.transcribe(torch_audio)
 
             if not verbose:
                 predicted_text = result["text"]
