@@ -23,7 +23,7 @@ def main(model, english,verbose, energy, pause,dynamic_energy,save_file):
     #there are no english models for large
     if model != "large" and english:
         model = model + ".en"
-    audio_model = whisper.load_model(model)
+    audio_model = whisper.load_model(model).to("cpu")
     audio_queue = queue.Queue()
     result_queue = queue.Queue()
     threading.Thread(target=record_audio,
