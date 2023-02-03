@@ -23,7 +23,8 @@ def main(model, english,verbose, energy, pause,dynamic_energy,save_file):
     #there are no english models for large
     if model != "large" and english:
         model = model + ".en"
-    audio_model = whisper.load_model(model).to("cpu")
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    audio_model = whisper.load_model(model).to(device)
     audio_queue = queue.Queue()
     result_queue = queue.Queue()
     threading.Thread(target=record_audio,
