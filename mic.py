@@ -35,7 +35,6 @@ def main(model, english,verbose, energy, pause,dynamic_energy,save_file,device):
     while True:
         model_output = result_queue.get()
         print(model_output)
-        print("keyword recognized: " + ('run test' in model_output))
 
 
 def record_audio(audio_queue, energy, pause, dynamic_energy, save_file, temp_dir):
