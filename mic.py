@@ -34,6 +34,7 @@ def main(model, english,verbose, energy, pause,dynamic_energy,save_file,device):
 
     while True:
         print(result_queue.get())
+        print('run test' in result_queue.get())
 
 
 def record_audio(audio_queue, energy, pause, dynamic_energy, save_file, temp_dir):
