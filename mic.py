@@ -12,18 +12,18 @@ import numpy as np
 
 @click.command()
 @click.option("--model", default="base", help="Model to use", type=click.Choice(["tiny","base", "small","medium","large"]))
+@click.option("--device", default=("cuda" if torch.cuda.is_available() else "cpu"), help="Model to use", type=click.Choice(["cpu","cuda"]))
 @click.option("--english", default=False, help="Whether to use English model",is_flag=True, type=bool)
 @click.option("--verbose", default=False, help="Whether to print verbose output", is_flag=True,type=bool)
 @click.option("--energy", default=300, help="Energy level for mic to detect", type=int)
 @click.option("--dynamic_energy", default=False,is_flag=True, help="Flag to enable dynamic engergy", type=bool)
 @click.option("--pause", default=0.8, help="Pause time before entry ends", type=float)
 @click.option("--save_file",default=False, help="Flag to save file", is_flag=True,type=bool)
-def main(model, english,verbose, energy, pause,dynamic_energy,save_file):
+def main(model, english,verbose, energy, pause,dynamic_energy,save_file,device):
     temp_dir = tempfile.mkdtemp() if save_file else None
     #there are no english models for large
     if model != "large" and english:
         model = model + ".en"
-    device = "cuda" if torch.cuda.is_available() else "cpu"
     audio_model = whisper.load_model(model).to(device)
     audio_queue = queue.Queue()
     result_queue = queue.Queue()
