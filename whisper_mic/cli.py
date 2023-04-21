@@ -9,6 +9,8 @@ import threading
 import click
 import torch
 import numpy as np
+from os import listdir
+from os.path import isfile, join
 
 @click.command()
 @click.option("--model", default="base", help="Model to use", type=click.Choice(["tiny","base", "small","medium","large"]))
