@@ -13,6 +13,9 @@ import numpy as np
 @click.command()
 @click.option("--model", default="base", help="Model to use", type=click.Choice(["tiny","base", "small","medium","large"]))
 @click.option("--device", default=("cuda" if torch.cuda.is_available() else "cpu"), help="Device to use", type=click.Choice(["cpu","cuda"]))
+@click.option("--scriptpath", help="runs scripts in scriptpath directories based on keywords", type=click.Path())
+# for when i figure out how to make this search and execute from multiple directories
+# @click.option("--scriptpath", help="runs scripts in scriptpath directories based on keywords", multiple=True, type=click.Path())
 @click.option("--english", default=False, help="Whether to use English model",is_flag=True, type=bool)
 @click.option("--verbose", default=False, help="Whether to print verbose output", is_flag=True,type=bool)
 @click.option("--energy", default=300, help="Energy level for mic to detect", type=int)
@@ -32,8 +35,22 @@ def main(model, english,verbose, energy, pause,dynamic_energy,save_file,device):
     threading.Thread(target=transcribe_forever,
                      args=(audio_queue, result_queue, audio_model, english, verbose, save_file)).start()
 
+    acceptablescripttypes = ('.bash','.py')
+
+    # Honestly i really just caveman'ed this section together all the way to os.system(exec) and it should really be rewritten, reformatted, optimized and multithreaded but at least it works even if it has some edge cases 
+    # todo Edgecases: for example if the script is named 'say something.bash' or 'you said.bash' im pretty sure it would just execute the script every time since that's a part of the non transctiption output that i didnt bother excluding
+
+    keywordlist = [scriptfile for scriptfile in listdir(scriptpath) if isfile(join(scriptpath, scriptfile)) and scriptfile.endswith(acceptablescripttypes) ]
+    print("Keyword list :" + str(keywordlist))
+    
     while True:
-        print(result_queue.get())
+        model_output = result_queue.get()
+        print(model_output)
+        for keywords in keywordlist:
+             for skrtypes in acceptablescripttypes:
+                  if keywords.endswith(skrtypes) and keywords.removesuffix(skrtypes).upper() in model_output.upper():
+             	      print("keyword recognized: " + str(keywords.removesuffix(skrtypes)))
+             	      os.system('exec ' + '"' + scriptpath + keywords + '" &')
 
 
 def record_audio(audio_queue, energy, pause, dynamic_energy, save_file, temp_dir):
