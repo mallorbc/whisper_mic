@@ -49,7 +49,7 @@ sudo apt install portaudio19-dev python3-pyaudio
 Currently, this is just a cli demo.  I forsee that this pip package could become more than that for example:
 
 ```python
-from whisper_mic import WhisperMic
+from whisper_mic.mic import WhisperMic
 mic = WhisperMic(timeout=5)
 command = mic.listen()
 ```
