@@ -5,6 +5,10 @@ This repo is based on the work done [here](https://github.com/openai/whisper) by
 
 See the video tutorial for this repo [here](https://www.youtube.com/watch?v=nwPaRSlDSaY)
 
+### Professional Assistance
+
+If are in need of paid professional help, that is available through this [email](mailto:blakecmallory@gmail.com)
+
 ## Setup
 
 1. Create a venv of your choice.
