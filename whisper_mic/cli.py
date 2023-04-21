@@ -63,6 +63,8 @@ def record_audio(audio_queue, energy, pause, dynamic_energy, save_file, temp_dir
     r.dynamic_energy_threshold = dynamic_energy
 
     with sr.Microphone(sample_rate=16000) as source:
+        print("Calibrating microphone for ambient noise...")
+        r.adjust_for_ambient_noise(source, duration = 1)
         print("Say something!")
         i = 0
         while True:
