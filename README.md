@@ -11,9 +11,10 @@ If are in need of paid professional help, that is available through this [email]
 
 ## Setup
 
-1. Create a venv of your choice.
-2. Run ```pip install -r requirements.txt```
+Now a pip package!
 
+1. Create a venv of your choice.
+2. Run ```pip install whisper-mic```
 
 ## Available models and languages
 
@@ -32,7 +33,7 @@ For English-only applications, the `.en` models tend to perform better, especial
 
 ## Microphone Demo
 
-You can use the model with a microphone using the ```mic.py``` program.  Use ```-h``` to see flag options.
+You can use the model with a microphone using the ```whisper_mic``` program.  Use ```-h``` to see flag options.
 
 Some of the more important flags are the ```--model``` and ```--english``` flags.
 
@@ -43,12 +44,21 @@ If you are having issues with the ```mic.py``` not running try the following:
 sudo apt install portaudio19-dev python3-pyaudio
 ```
 
+## Contributing
+
+Currently, this is just a cli demo.  I forsee that this pip package could become more than that for example:
+
+```python
+from whisper_mic import WhisperMic
+mic = WhisperMic(timeout=5)
+command = mic.listen()
+```
 
 ## License
 
-The code and the model weights of Whisper are released under the MIT License. See their repo for more information.
+The model weights of Whisper are released under the MIT License. See their repo for more information.
 
-The code under this repo is under the AGPL license.  See [LICENSE](LICENSE) for further details.
+This code under this repo is under the MIT license.  See [LICENSE](LICENSE) for further details.
 
 ## Thanks
 Until recently, access to high performing speech to text models was only available through paid serviecs.  With this release, I am excited for the many applications that will come.
