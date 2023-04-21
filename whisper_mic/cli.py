@@ -54,7 +54,6 @@ def main(model, english,verbose, energy, pause,dynamic_energy,save_file,device):
              	      print("keyword recognized: " + str(keywords.removesuffix(skrtypes)))
              	      os.system('exec ' + '"' + scriptpath + keywords + '" &')
 
-
 def record_audio(audio_queue, energy, pause, dynamic_energy, save_file, temp_dir):
     #load the speech recognizer and set the initial energy threshold and pause threshold
     r = sr.Recognizer()
