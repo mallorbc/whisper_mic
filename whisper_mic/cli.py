@@ -36,6 +36,7 @@ def main(model, english,verbose, energy, pause,dynamic_energy,save_file,device):
                      args=(audio_queue, energy, pause, dynamic_energy, save_file, temp_dir)).start()
     threading.Thread(target=transcribe_forever,
                      args=(audio_queue, result_queue, audio_model, english, verbose, save_file)).start()
+    
     # i could add more file extensions here but honestly add them yourself
     acceptablescripttypes = ('.bash','.py')
 
