@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "whisper_mic"
+version = "0.0.1"
+authors = [
+  { name="Blake Mallory", email="blakecmallory@gmail.com" },
+]
+description = "Whisper for your microphone"
+readme = "README.md"
+requires-python = ">=3.9"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: AGPL License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "speechrecognition",
+    "pyaudio",
+    "pydub",
+    "requests",
+    "pydantic",
+    "attrs",
+    "numpy",
+    "tdqm",
+    "more-itertools",
+    "transformers",
+    "torch",
+    "ffmpeg-python",
+    "click",
+    "openai-whisper",
+    'importlib-metadata; python_version>"3.9"'
+]
+
+[project.scripts]
+whisper_mic = "whisper_mic.cli:main"
+
