@@ -24,7 +24,7 @@ from os.path import isfile, join
 @click.option("--dynamic_energy", default=False,is_flag=True, help="Flag to enable dynamic energy", type=bool)
 @click.option("--pause", default=0.8, help="Pause time before entry ends", type=float)
 @click.option("--save_file",default=False, help="Flag to save file", is_flag=True,type=bool)
-def main(model, english,verbose, energy, pause,dynamic_energy,save_file,device):
+def main(model, english,verbose, energy, pause,dynamic_energy,save_file,device,scriptpath):
     temp_dir = tempfile.mkdtemp() if save_file else None
     #there are no english models for large
     if model != "large" and english:
@@ -37,24 +37,27 @@ def main(model, english,verbose, energy, pause,dynamic_energy,save_file,device):
     threading.Thread(target=transcribe_forever,
                      args=(audio_queue, result_queue, audio_model, english, verbose, save_file)).start()
     
-    # i could add more file extensions here but honestly add them yourself
-    acceptablescripttypes = ('.bash','.py')
-
     # Honestly i really just caveman'ed this section together all the way to os.system(exec) and it should really be rewritten, reformatted, optimized and multithreaded but at least it works even if it has some edge cases 
     # todo Edgecases: for example if the script is named 'say something.bash' or 'you said.bash' im pretty sure it would just execute the script every time since that's a part of the non transctiption output that i didnt bother excluding
 
-    keywordlist = [scriptfile for scriptfile in listdir(scriptpath) if isfile(join(scriptpath, scriptfile)) and scriptfile.endswith(acceptablescripttypes) ]
+    # i could add more file extensions here but honestly add them yourself
+    acceptablescripttypes = ('.bash','.py')
+    
+    keywordlist = getnewkeywordlist(scriptpath)
     print("Keyword list :" + str(keywordlist))
     
     while True:
         model_output = result_queue.get()
+        keywordlist = getnewkeywordlist(scriptpath)
         print(model_output)
         for keywords in keywordlist:
              for skrtypes in acceptablescripttypes:
                   if keywords.endswith(skrtypes) and keywords.removesuffix(skrtypes).upper() in model_output.upper():
              	      print("keyword recognized: " + str(keywords.removesuffix(skrtypes)))
              	      os.system('exec ' + '"' + scriptpath + keywords + '" &')
-
+def getnewkeywordlist(scriptpath):
+    return [scriptfile for scriptfile in listdir(scriptpath) if isfile(join(scriptpath, scriptfile)) and scriptfile.endswith(acceptablescripttypes) ]          
+    
 def record_audio(audio_queue, energy, pause, dynamic_energy, save_file, temp_dir):
     #load the speech recognizer and set the initial energy threshold and pause threshold
     r = sr.Recognizer()
