@@ -50,10 +50,10 @@ def main(model, english,verbose, energy, pause,dynamic_energy,save_file,device,s
         model_output = result_queue.get()
         keywordlist = getnewkeywordlist(scriptpath, acceptablescripttypes)
         print(model_output)
-        #parts of this should probably be moved into getnewkerwordlist
+        #parts of this should probably be moved into getnewkerwordlistYou said:  
         for keywords in keywordlist:
              for skrtypes in acceptablescripttypes:
-                  if keywords.endswith(skrtypes) and keywords.removesuffix(skrtypes).upper() in model_output.upper():
+                  if keywords.endswith(skrtypes) and keywords.removesuffix(skrtypes).upper() in remove_prefix(model_output,'You said:   ').upper():
              	      print("keyword recognized: " + str(keywords.removesuffix(skrtypes)))
              	      os.system('exec ' + '"' + scriptpath + keywords + '" &')
 def getnewkeywordlist(scriptpath, acceptablescripttypes):
