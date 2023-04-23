@@ -53,7 +53,7 @@ def main(model, english,verbose, energy, pause,dynamic_energy,save_file,device,s
         #parts of this should probably be moved into getnewkerwordlistYou said:  
         for keywords in keywordlist:
              for skrtypes in acceptablescripttypes:
-                  if keywords.endswith(skrtypes) and keywords.removesuffix(skrtypes).upper() in (model_output.removeprefix('You said:   ')).upper():
+                  if keywords.endswith(skrtypes) and keywords.removesuffix(skrtypes).upper() in (model_output.removeprefix('You said:')).upper():
              	      print("keyword recognized: " + str(keywords.removesuffix(skrtypes)))
              	      os.system('exec ' + '"' + scriptpath + keywords + '" &')
 def getnewkeywordlist(scriptpath, acceptablescripttypes):
