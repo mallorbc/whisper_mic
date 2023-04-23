@@ -43,19 +43,19 @@ def main(model, english,verbose, energy, pause,dynamic_energy,save_file,device,s
     # i could add more file extensions here but honestly add them yourself
     acceptablescripttypes = ('.bash','.py')
     
-    keywordlist = getnewkeywordlist(scriptpath)
+    keywordlist = getnewkeywordlist(scriptpath, acceptablescripttypes)
     print("Keyword list :" + str(keywordlist))
     
     while True:
         model_output = result_queue.get()
-        keywordlist = getnewkeywordlist(scriptpath)
+        keywordlist = getnewkeywordlist(scriptpath, acceptablescripttypes)
         print(model_output)
         for keywords in keywordlist:
              for skrtypes in acceptablescripttypes:
                   if keywords.endswith(skrtypes) and keywords.removesuffix(skrtypes).upper() in model_output.upper():
              	      print("keyword recognized: " + str(keywords.removesuffix(skrtypes)))
              	      os.system('exec ' + '"' + scriptpath + keywords + '" &')
-def getnewkeywordlist(scriptpath):
+def getnewkeywordlist(scriptpath, acceptablescripttypes):
     return [scriptfile for scriptfile in listdir(scriptpath) if isfile(join(scriptpath, scriptfile)) and scriptfile.endswith(acceptablescripttypes) ]          
     
 def record_audio(audio_queue, energy, pause, dynamic_energy, save_file, temp_dir):
