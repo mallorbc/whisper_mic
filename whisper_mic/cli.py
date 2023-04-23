@@ -50,6 +50,7 @@ def main(model, english,verbose, energy, pause,dynamic_energy,save_file,device,s
         model_output = result_queue.get()
         keywordlist = getnewkeywordlist(scriptpath, acceptablescripttypes)
         print(model_output)
+        #parts of this should probably be moved into getnewkerwordlist
         for keywords in keywordlist:
              for skrtypes in acceptablescripttypes:
                   if keywords.endswith(skrtypes) and keywords.removesuffix(skrtypes).upper() in model_output.upper():
@@ -66,8 +67,10 @@ def record_audio(audio_queue, energy, pause, dynamic_energy, save_file, temp_dir
     r.dynamic_energy_threshold = dynamic_energy
 
     with sr.Microphone(sample_rate=16000) as source:
+    	# a poor implementation of a suggestion by AryanEmbered
         print("Calibrating microphone for ambient noise...")
         r.adjust_for_ambient_noise(source, duration = 1)
+
         print("Say something!")
         i = 0
         while True:
