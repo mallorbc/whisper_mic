@@ -40,7 +40,7 @@ def main(model, english,verbose, energy, pause,dynamic_energy,save_file,device,s
     # Honestly i really just caveman'ed this section together all the way to os.system(exec) and it should really be rewritten, reformatted, optimized and multithreaded but at least it works even if it has some edge cases 
     # todo Edgecases: for example if the script is named 'say something.bash' or 'you said.bash' it would just execute the script every time since that's a part of the non transctiption output that i didnt bother excluding
 
-    # i could add more file extensions here but honestly add them yourself
+    # i could add more file extensions here but honestly add them yourself. Todo add sane defaults and a way for the user to define the extensions as a command argument
     acceptablescripttypes = ('.bash','.py')
     
     keywordlist = getnewkeywordlist(scriptpath, acceptablescripttypes)
