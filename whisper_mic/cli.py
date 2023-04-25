@@ -42,7 +42,6 @@ def main(model, english,verbose, energy, pause,dynamic_energy,save_file,device,s
     # Honestly i really just caveman'ed this section together all the way to os.system(exec) and it should really be rewritten, reformatted, optimized and multithreaded but at least it works even if it has some edge cases 
     # todo Edgecases: it will execute all the scripts with the valid extensions with the same keywords. That's perhaps not good?
 
-    # i could add more file extensions here but honestly add them yourself. Todo add sane defaults and a way for the user to define the extensions as a command argument
     if script_path != os.getcwd() and not script_extensions:
         acceptablescripttypes = ('.bash','.py')
     else:
@@ -56,7 +55,7 @@ def main(model, english,verbose, energy, pause,dynamic_energy,save_file,device,s
         model_output = result_queue.get()
         keywordlist = getnewkeywordlist(script_path, acceptablescripttypes)
         print(model_output)
-        #parts of this should probably be moved into getnewkerwordlistYou said:  
+        #parts of this should probably be moved into getnewkerwordlist  
         for keywords in keywordlist:
              for skrtypes in acceptablescripttypes:
                   if keywords.endswith(skrtypes) and keywords.removesuffix(skrtypes).upper() in (model_output.removeprefix('You said: ')).upper():
@@ -75,7 +74,7 @@ def record_audio(audio_queue, energy, pause, dynamic_energy, save_file, temp_dir
     with sr.Microphone(sample_rate=16000) as source:
         if ambient == True:
             print("Calibrating microphone for ambient noise...")
-            r.adjust_for_ambient_noise(source, duration = 1)
+            r.adjust_for_ambient_noise(source, duration = 1) #thanks AryanEmbered
 
         print("Say something!")
         i = 0
