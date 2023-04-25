@@ -15,9 +15,9 @@ from os.path import isfile, join
 @click.command()
 @click.option("--model", default="base", help="Model to use", type=click.Choice(["tiny","base", "small","medium","large"]))
 @click.option("--device", default=("cuda" if torch.cuda.is_available() else "cpu"), help="Device to use", type=click.Choice(["cpu","cuda"]))
-@click.option("--scriptpath", default=(os.getcwd()), help="runs scripts in provided directory based on if the filename can be found in the model output ex: 'computer run whisper.bash' ", type=click.Path())
+@click.option("--script_path", default=(os.getcwd()), help="runs scripts in provided directory based on if the filename can be found in the model output ex: 'computer run whisper.bash' ", type=click.Path())
 # for when i figure out how to make this search and execute from multiple directories
-# @click.option("--scriptpath", help="runs scripts in scriptpath directories based on keywords", multiple=True, type=click.Path())
+# @click.option("--script_path", help="runs scripts in script_path directories based on keywords", multiple=True, type=click.Path())
 @click.option("--script_extensions", '-s', default=[], help="valid script extensions to execute ex: .bash, defaults to .bash .py if none are provided", multiple=True, type=str)
 @click.option("--ambient", default=False, help="allows for ambient noise adjustment at startup",is_flag=True,type=bool)
 @click.option("--english", default=False, help="Whether to use English model",is_flag=True, type=bool)
@@ -26,7 +26,7 @@ from os.path import isfile, join
 @click.option("--dynamic_energy", default=False,is_flag=True, help="Flag to enable dynamic energy", type=bool)
 @click.option("--pause", default=0.8, help="Pause time before entry ends", type=float)
 @click.option("--save_file",default=False, help="Flag to save file", is_flag=True,type=bool)
-def main(model, english,verbose, energy, pause,dynamic_energy,save_file,device,scriptpath,script_extensions,ambient):
+def main(model, english,verbose, energy, pause,dynamic_energy,save_file,device,script_path,script_extensions,ambient):
     temp_dir = tempfile.mkdtemp() if save_file else None
     #there are no english models for large
     if model != "large" and english:
@@ -43,27 +43,27 @@ def main(model, english,verbose, energy, pause,dynamic_energy,save_file,device,s
     # todo Edgecases: it will execute all the scripts with the valid extensions with the same keywords. That's perhaps not good?
 
     # i could add more file extensions here but honestly add them yourself. Todo add sane defaults and a way for the user to define the extensions as a command argument
-    if scriptpath != os.getcwd() and not script_extensions:
+    if script_path != os.getcwd() and not script_extensions:
         acceptablescripttypes = ('.bash','.py')
     else:
         acceptablescripttypes = script_extensions
     
-    keywordlist = getnewkeywordlist(scriptpath, acceptablescripttypes)
+    keywordlist = getnewkeywordlist(script_path, acceptablescripttypes)
     if keywordlist:
         print("Keyword list :" + str(keywordlist))
     
     while True:
         model_output = result_queue.get()
-        keywordlist = getnewkeywordlist(scriptpath, acceptablescripttypes)
+        keywordlist = getnewkeywordlist(script_path, acceptablescripttypes)
         print(model_output)
         #parts of this should probably be moved into getnewkerwordlistYou said:  
         for keywords in keywordlist:
              for skrtypes in acceptablescripttypes:
                   if keywords.endswith(skrtypes) and keywords.removesuffix(skrtypes).upper() in (model_output.removeprefix('You said: ')).upper():
              	      print("keyword recognized: " + str(keywords.removesuffix(skrtypes)))
-             	      os.system('exec ' + '"' + scriptpath + keywords + '" &')
-def getnewkeywordlist(scriptpath, acceptablescripttypes):
-    return [scriptfile for scriptfile in listdir(scriptpath) if isfile(join(scriptpath, scriptfile)) and scriptfile.endswith(acceptablescripttypes) ]          
+             	      os.system('exec ' + '"' + script_path + keywords + '" &')
+def getnewkeywordlist(script_path, acceptablescripttypes):
+    return [scriptfile for scriptfile in listdir(script_path) if isfile(join(script_path, scriptfile)) and scriptfile.endswith(acceptablescripttypes) ]          
     
 def record_audio(audio_queue, energy, pause, dynamic_energy, save_file, temp_dir, ambient):
     #load the speech recognizer and set the initial energy threshold and pause threshold
