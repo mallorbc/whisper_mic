@@ -9,17 +9,24 @@ import threading
 import click
 import torch
 import numpy as np
+from os import listdir
+from os.path import isfile, join
 
 @click.command()
 @click.option("--model", default="base", help="Model to use", type=click.Choice(["tiny","base", "small","medium","large"]))
 @click.option("--device", default=("cuda" if torch.cuda.is_available() else "cpu"), help="Device to use", type=click.Choice(["cpu","cuda"]))
+@click.option("--scriptpath", default=(os.getcwd()), help="runs scripts in provided directory based on if the filename can be found in the model output ex: 'computer run whisper.bash' ", type=click.Path())
+# for when i figure out how to make this search and execute from multiple directories
+# @click.option("--scriptpath", help="runs scripts in scriptpath directories based on keywords", multiple=True, type=click.Path())
+@click.option("--script_extensions", '-s', default=[], help="valid script extensions to execute ex: .bash, defaults to .bash .py if none are provided", multiple=True, type=str)
+@click.option("--ambient", default=False, help="allows for ambient noise adjustment at startup",is_flag=True,type=bool)
 @click.option("--english", default=False, help="Whether to use English model",is_flag=True, type=bool)
 @click.option("--verbose", default=False, help="Whether to print verbose output", is_flag=True,type=bool)
 @click.option("--energy", default=300, help="Energy level for mic to detect", type=int)
 @click.option("--dynamic_energy", default=False,is_flag=True, help="Flag to enable dynamic energy", type=bool)
 @click.option("--pause", default=0.8, help="Pause time before entry ends", type=float)
 @click.option("--save_file",default=False, help="Flag to save file", is_flag=True,type=bool)
-def main(model, english,verbose, energy, pause,dynamic_energy,save_file,device):
+def main(model, english,verbose, energy, pause,dynamic_energy,save_file,device,scriptpath,script_extensions,ambient):
     temp_dir = tempfile.mkdtemp() if save_file else None
     #there are no english models for large
     if model != "large" and english:
@@ -28,15 +35,37 @@ def main(model, english,verbose, energy, pause,dynamic_energy,save_file,device):
     audio_queue = queue.Queue()
     result_queue = queue.Queue()
     threading.Thread(target=record_audio,
-                     args=(audio_queue, energy, pause, dynamic_energy, save_file, temp_dir)).start()
+                     args=(audio_queue, energy, pause, dynamic_energy, save_file, temp_dir, ambient)).start()
     threading.Thread(target=transcribe_forever,
                      args=(audio_queue, result_queue, audio_model, english, verbose, save_file)).start()
+    
+    # Honestly i really just caveman'ed this section together all the way to os.system(exec) and it should really be rewritten, reformatted, optimized and multithreaded but at least it works even if it has some edge cases 
+    # todo Edgecases: it will execute all the scripts with the valid extensions with the same keywords. That's perhaps not good?
 
+    # i could add more file extensions here but honestly add them yourself. Todo add sane defaults and a way for the user to define the extensions as a command argument
+    if scriptpath != os.getcwd() and not script_extensions:
+        acceptablescripttypes = ('.bash','.py')
+    else:
+        acceptablescripttypes = script_extensions
+    
+    keywordlist = getnewkeywordlist(scriptpath, acceptablescripttypes)
+    if keywordlist:
+        print("Keyword list :" + str(keywordlist))
+    
     while True:
-        print(result_queue.get())
-
-
-def record_audio(audio_queue, energy, pause, dynamic_energy, save_file, temp_dir):
+        model_output = result_queue.get()
+        keywordlist = getnewkeywordlist(scriptpath, acceptablescripttypes)
+        print(model_output)
+        #parts of this should probably be moved into getnewkerwordlistYou said:  
+        for keywords in keywordlist:
+             for skrtypes in acceptablescripttypes:
+                  if keywords.endswith(skrtypes) and keywords.removesuffix(skrtypes).upper() in (model_output.removeprefix('You said: ')).upper():
+             	      print("keyword recognized: " + str(keywords.removesuffix(skrtypes)))
+             	      os.system('exec ' + '"' + scriptpath + keywords + '" &')
+def getnewkeywordlist(scriptpath, acceptablescripttypes):
+    return [scriptfile for scriptfile in listdir(scriptpath) if isfile(join(scriptpath, scriptfile)) and scriptfile.endswith(acceptablescripttypes) ]          
+    
+def record_audio(audio_queue, energy, pause, dynamic_energy, save_file, temp_dir, ambient):
     #load the speech recognizer and set the initial energy threshold and pause threshold
     r = sr.Recognizer()
     r.energy_threshold = energy
@@ -44,6 +73,10 @@ def record_audio(audio_queue, energy, pause, dynamic_energy, save_file, temp_dir
     r.dynamic_energy_threshold = dynamic_energy
 
     with sr.Microphone(sample_rate=16000) as source:
+        if ambient == True:
+            print("Calibrating microphone for ambient noise...")
+            r.adjust_for_ambient_noise(source, duration = 1)
+
         print("Say something!")
         i = 0
         while True:
