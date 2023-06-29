@@ -62,13 +62,10 @@ sudo apt install portaudio19-dev python3-pyaudio
 
 ## Contributing
 
-Currently, this is just a cli demo.  I forsee that this pip package could become more than that for example:
-
-```python
-from whisper_mic.mic import WhisperMic
-mic = WhisperMic(timeout=5)
-command = mic.listen()
-```
+Some ideas that you can add are:
+1. Supporting different implementations of Whisper
+2. Adding additional optional functionality.
+3. Use Pyaudio to get the audio for the listen method to speed things up
 
 ## License
 
