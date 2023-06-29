@@ -39,6 +39,20 @@ You can use the model with a microphone using the ```whisper_mic``` program.  Us
 
 Some of the more important flags are the ```--model``` and ```--english``` flags.
 
+## Usage In Other Projects
+
+You can use this code in other projects rather than just use it for a demo.  You can do this with the ```listen``` method.
+
+```python
+from whisper_mic.whisper_mic import WhisperMic
+
+mic = WhisperMic()
+result = mic.listen()
+print(result)
+```
+
+Check out what the possible arguments are by looking at the ```cli.py``` file
+
 ## Troubleshooting
 
 If you are having issues with the ```mic.py``` not running try the following:
