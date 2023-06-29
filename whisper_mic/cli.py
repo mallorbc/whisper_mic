@@ -21,9 +21,14 @@ from whisper_mic.whisper_mic import WhisperMic
 @click.option("--dynamic_energy", default=False,is_flag=True, help="Flag to enable dynamic energy", type=bool)
 @click.option("--pause", default=0.8, help="Pause time before entry ends", type=float)
 @click.option("--save_file",default=False, help="Flag to save file", is_flag=True,type=bool)
-def main(model, english,verbose, energy, pause,dynamic_energy,save_file,device):
+@click.option("--loop", default=False, help="Flag to loop", is_flag=True,type=bool)
+def main(model, english,verbose, energy, pause,dynamic_energy,save_file,device,loop):
     mic = WhisperMic(model=model, english=english, verbose=verbose, energy=energy, pause=pause, dynamic_energy=dynamic_energy, save_file=save_file, device=device)
-    mic.listen_loop()
+    if not loop:
+        result = mic.listen()
+        print("You said: " + result)
+    else:
+        mic.listen_loop()
 
 if __name__ == "__main__":
     main()
