@@ -5,6 +5,8 @@ This repo is based on the work done [here](https://github.com/openai/whisper) by
 
 See the video tutorial for this repo [here](https://www.youtube.com/watch?v=nwPaRSlDSaY)
 
+The video is a bit out of date now.  The code is much better now and pip installable
+
 ### Professional Assistance
 
 If are in need of paid professional help, that is available through this [email](mailto:blakecmallory@gmail.com)
