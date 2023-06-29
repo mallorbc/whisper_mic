@@ -70,23 +70,14 @@ class WhisperMic:
         while True:
             if self.break_threads:
                 break
+            self.transcribe()
+
+
+    def transcribe(self,data=None):
+        if data is None:
             audio_data = self.audio_queue.get()
-            if self.english:
-                result = self.audio_model.transcribe(audio_data,language='english')
-            else:
-                result = self.audio_model.transcribe(audio_data)
-
-            if not self.verbose:
-                predicted_text = result["text"]
-                self.result_queue.put_nowait("You said: " + predicted_text)
-            else:
-                self.result_queue.put_nowait(result)
-
-            if self.save_file:
-                os.remove(audio_data)
-
-    def transcribe(self):
-        audio_data = self.audio_queue.get()
+        else:
+            audio_data = data
         if self.english:
             result = self.audio_model.transcribe(audio_data,language='english')
         else:
@@ -94,7 +85,7 @@ class WhisperMic:
 
         if not self.verbose:
             predicted_text = result["text"]
-            self.result_queue.put_nowait("You said: " + predicted_text)
+            self.result_queue.put_nowait(predicted_text)
         else:
             self.result_queue.put_nowait(result)
 
@@ -104,20 +95,18 @@ class WhisperMic:
 
     def listen_loop(self):
         threading.Thread(target=self.transcribe_forever).start()
-
         while True:
             print(self.result_queue.get())
 
     def listen(self):
-        transcribe_thread = threading.Thread(target=self.transcribe)
-        transcribe_thread.start()
-
+        audio_data = self.audio_queue.get()
+        self.transcribe(data=audio_data)
         while True:
             if not self.result_queue.empty():
-                transcribe_thread.join()
                 return self.result_queue.get()
             
     def toggle_microphone(self):
+        #TO DO: make this work
         self.mic_active = not self.mic_active
         if self.mic_active:
             print("Mic on")
