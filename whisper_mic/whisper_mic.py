@@ -9,6 +9,7 @@ from pydub import AudioSegment
 import os
 import tempfile
 import time
+import platform
 
 from whisper_mic.utils import get_logger
 
@@ -22,6 +23,14 @@ class WhisperMic:
         self.save_file = save_file
         self.verbose = verbose
         self.english = english
+
+        self.platform = platform.system()
+
+        if self.platform == "darwin":
+            if device == "mps":
+                self.logger.warning("Using MPS for Mac, this does not work but may in the future")
+                device = "mps"
+                device = torch.device(device)
 
         if model != "large" and self.english:
             model = model + ".en"
