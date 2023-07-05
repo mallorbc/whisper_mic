@@ -1,5 +1,5 @@
 # Whisper Mic
-This repo is based on the work done [here](https://github.com/openai/whisper) by OpenAI.  This repo allows you use use a mic as demo. This repo copies some of the README from original project.
+This repo is based on the work done [here](https://github.com/openai/whisper) by OpenAI.  This repo allows you use use a mic as demo. This repo copies some of the README from the original project.
 
 ## Video Tutorial
 
@@ -55,7 +55,7 @@ Check out what the possible arguments are by looking at the ```cli.py``` file
 
 ## Troubleshooting
 
-If you are having issues with the ```mic.py``` not running try the following:
+If you are having issues, try the following:
 ```
 sudo apt install portaudio19-dev python3-pyaudio
 ```
