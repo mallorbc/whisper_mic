@@ -1,14 +1,5 @@
-import io
-from pydub import AudioSegment
-import speech_recognition as sr
-import whisper
-import queue
-import tempfile
-import os
-import threading
 import click
 import torch
-import numpy as np
 
 from whisper_mic.whisper_mic import WhisperMic
 
