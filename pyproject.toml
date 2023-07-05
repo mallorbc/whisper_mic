@@ -31,6 +31,7 @@ dependencies = [
     "ffmpeg-python",
     "click",
     "openai-whisper",
+    "rich",
     'importlib-metadata; python_version>"3.9"'
 ]
 
