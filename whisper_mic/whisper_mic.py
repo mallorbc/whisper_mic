@@ -10,9 +10,12 @@ import os
 import tempfile
 import time
 
+from whisper_mic.utils import get_logger
+
 
 class WhisperMic:
     def __init__(self,model="base",device=("cuda" if torch.cuda.is_available() else "cpu"),english=False,verbose=False,energy=300,pause=0.8,dynamic_energy=False,save_file=False):
+        self.logger = get_logger("whisper_mic", "info")
         self.energy = energy
         self.pause = pause
         self.dynamic_energy = dynamic_energy
@@ -32,38 +35,46 @@ class WhisperMic:
         self.break_threads = False
         self.mic_active = False
 
-        self.mic_thread = threading.Thread(target=self.record_audio, daemon=True)
-        self.mic_thread.start()
+        self.banned_results = [""," ","\n",None]
+
+        self.setup_mic()
 
 
-    def record_audio(self):
-        r = sr.Recognizer()
-        r.energy_threshold = self.energy
-        r.pause_threshold = self.pause
-        r.dynamic_energy_threshold = self.dynamic_energy
-        
-        with sr.Microphone(sample_rate=16000) as source:
-            self.mic_active = True
-            print("Say something!")
-            i = 0
-            while True:
-                if not self.mic_active:
-                    break
-                #get and save audio to wav file
-                audio = r.listen(source)
-                if self.save_file:
-                    data = io.BytesIO(audio.get_wav_data())
-                    audio_clip = AudioSegment.from_file(data)
-                    filename = os.path.join(self.temp_dir, f"temp{i}.wav")
-                    audio_clip.export(filename, format="wav")
-                    audio_data = filename
-                else:
-                    torch_audio = torch.from_numpy(np.frombuffer(audio.get_raw_data(), np.int16).flatten().astype(np.float32) / 32768.0)
-                    audio_data = torch_audio
-                
-                self.audio_queue.put_nowait(audio_data)
-                i += 1
+    def setup_mic(self):
+        self.source = sr.Microphone(sample_rate=16000)
 
+        self.recorder = sr.Recognizer()
+        self.recorder.energy_threshold = self.energy
+        self.recorder.pause_threshold = self.pause
+        self.recorder.dynamic_energy_threshold = self.dynamic_energy
+
+        with self.source:
+            self.recorder.adjust_for_ambient_noise(self.source)
+
+        self.recorder.listen_in_background(self.source, self.record_callback, phrase_time_limit=2)
+        self.logger.info("Mic setup complete, you can now talk")
+
+
+    def preprocess(self, data):
+        return torch.from_numpy(np.frombuffer(data, np.int16).flatten().astype(np.float32) / 32768.0)
+    
+    def get_all_audio(self,min_time=-1):
+        audio = bytes()
+        got_audio = False
+        time_start = time.time()
+        while not got_audio or time.time() - time_start < min_time:
+            while not self.audio_queue.empty():
+                audio += self.audio_queue.get()
+                got_audio = True
+
+        data = sr.AudioData(audio,16000,2)
+        data = data.get_raw_data()
+        return data
+
+
+    def record_callback(self,_, audio:sr.AudioData) -> None:
+        data = audio.get_raw_data()
+        self.audio_queue.put_nowait(data)
 
 
     def transcribe_forever(self):
@@ -73,21 +84,25 @@ class WhisperMic:
             self.transcribe()
 
 
-    def transcribe(self,data=None):
+    def transcribe(self,data=None,realtime=False):
         if data is None:
-            audio_data = self.audio_queue.get()
+            # audio_data = self.audio_queue.get()
+            audio_data = self.get_all_audio()
         else:
             audio_data = data
+        audio_data = self.preprocess(audio_data)
         if self.english:
             result = self.audio_model.transcribe(audio_data,language='english')
         else:
             result = self.audio_model.transcribe(audio_data)
 
+        predicted_text = result["text"]
         if not self.verbose:
-            predicted_text = result["text"]
-            self.result_queue.put_nowait(predicted_text)
+            if predicted_text not in self.banned_results:
+                self.result_queue.put_nowait(predicted_text)
         else:
-            self.result_queue.put_nowait(result)
+            if predicted_text not in self.banned_results:
+                self.result_queue.put_nowait(result)
 
         if self.save_file:
             os.remove(audio_data)
@@ -96,10 +111,12 @@ class WhisperMic:
     def listen_loop(self):
         threading.Thread(target=self.transcribe_forever).start()
         while True:
-            print(self.result_queue.get())
+            result = self.result_queue.get()
+            print(result)
+                
 
-    def listen(self):
-        audio_data = self.audio_queue.get()
+    def listen(self,timout=3):
+        audio_data = self.get_all_audio(timout)
         self.transcribe(data=audio_data)
         while True:
             if not self.result_queue.empty():
