@@ -95,7 +95,6 @@ class WhisperMic:
 
     def transcribe(self,data=None,realtime=False):
         if data is None:
-            # audio_data = self.audio_queue.get()
             audio_data = self.get_all_audio()
         else:
             audio_data = data
