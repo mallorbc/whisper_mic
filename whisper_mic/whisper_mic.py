@@ -123,8 +123,8 @@ class WhisperMic:
             print(result)
                 
 
-    def listen(self,timout=3):
-        audio_data = self.get_all_audio(timout)
+    def listen(self,timeout=3):
+        audio_data = self.get_all_audio(timeout)
         self.transcribe(data=audio_data)
         while True:
             if not self.result_queue.empty():
