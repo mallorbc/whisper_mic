@@ -10,6 +10,7 @@ import os
 import tempfile
 import time
 import platform
+import pynput.keyboard
 
 from whisper_mic.utils import get_logger
 
@@ -23,6 +24,7 @@ class WhisperMic:
         self.save_file = save_file
         self.verbose = verbose
         self.english = english
+        self.keyboard = pynput.keyboard.Controller()
 
         self.platform = platform.system()
 
@@ -39,7 +41,7 @@ class WhisperMic:
         self.temp_dir = tempfile.mkdtemp() if save_file else None
 
         self.audio_queue = queue.Queue()
-        self.result_queue = queue.Queue()
+        self.result_queue: "queue.Queue[str]" = queue.Queue()
 
         self.break_threads = False
         self.mic_active = False
@@ -66,8 +68,8 @@ class WhisperMic:
 
     def preprocess(self, data):
         return torch.from_numpy(np.frombuffer(data, np.int16).flatten().astype(np.float32) / 32768.0)
-    
-    def get_all_audio(self,min_time=-1):
+
+    def get_all_audio(self, min_time: float = -1.):
         audio = bytes()
         got_audio = False
         time_start = time.time()
@@ -81,19 +83,19 @@ class WhisperMic:
         return data
 
 
-    def record_callback(self,_, audio:sr.AudioData) -> None:
+    def record_callback(self,_, audio: sr.AudioData) -> None:
         data = audio.get_raw_data()
         self.audio_queue.put_nowait(data)
 
 
-    def transcribe_forever(self):
+    def transcribe_forever(self) -> None:
         while True:
             if self.break_threads:
                 break
             self.transcribe()
 
 
-    def transcribe(self,data=None,realtime=False):
+    def transcribe(self,data=None, realtime: bool = False) -> None:
         if data is None:
             audio_data = self.get_all_audio()
         else:
@@ -116,21 +118,24 @@ class WhisperMic:
             os.remove(audio_data)
 
 
-    def listen_loop(self):
+    def listen_loop(self, dictate: bool = False) -> None:
         threading.Thread(target=self.transcribe_forever).start()
         while True:
             result = self.result_queue.get()
-            print(result)
-                
+            if dictate:
+                self.keyboard.type(result)
+            else:
+                print(result)
 
-    def listen(self,timout=3):
-        audio_data = self.get_all_audio(timout)
+
+    def listen(self, timeout: int = 3):
+        audio_data = self.get_all_audio(timeout)
         self.transcribe(data=audio_data)
         while True:
             if not self.result_queue.empty():
                 return self.result_queue.get()
-            
-    def toggle_microphone(self):
+
+    def toggle_microphone(self) -> None:
         #TO DO: make this work
         self.mic_active = not self.mic_active
         if self.mic_active:
@@ -139,4 +144,3 @@ class WhisperMic:
             print("turning off mic")
             self.mic_thread.join()
             print("Mic off")
-    
