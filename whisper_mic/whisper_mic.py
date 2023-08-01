@@ -15,7 +15,7 @@ from whisper_mic.utils import get_logger
 
 
 class WhisperMic:
-    def __init__(self,model="base",device=("cuda" if torch.cuda.is_available() else "cpu"),english=False,verbose=False,energy=300,pause=0.8,dynamic_energy=False,save_file=False):
+    def __init__(self,model="base",device=("cuda" if torch.cuda.is_available() else "cpu"),english=False,verbose=False,energy=300,pause=0.8,dynamic_energy=False,save_file=False, model_root="~/.cache/whisper"):
         self.logger = get_logger("whisper_mic", "info")
         self.energy = energy
         self.pause = pause
@@ -34,8 +34,8 @@ class WhisperMic:
 
         if model != "large" and self.english:
             model = model + ".en"
-
-        self.audio_model = whisper.load_model(model).to(device)
+        
+        self.audio_model = whisper.load_model(model, download_root=model_root).to(device)
         self.temp_dir = tempfile.mkdtemp() if save_file else None
 
         self.audio_queue = queue.Queue()
