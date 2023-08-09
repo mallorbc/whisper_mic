@@ -34,7 +34,7 @@ class WhisperMic:
                 device = "mps"
                 device = torch.device(device)
 
-        if model != "large" and self.english:
+        if (model != "large" and model != "large-v2") and self.english:
             model = model + ".en"
         
         self.audio_model = whisper.load_model(model, download_root=model_root).to(device)
