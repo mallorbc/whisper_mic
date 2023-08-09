@@ -39,6 +39,10 @@ You can use the model with a microphone using the ```whisper_mic``` program.  Us
 
 Some of the more important flags are the ```--model``` and ```--english``` flags.
 
+## Transcribing To A File
+
+Using the command: ```whisper_mic --loop --dictate``` will type the words you say on your active cursor.
+
 ## Usage In Other Projects
 
 You can use this code in other projects rather than just use it for a demo.  You can do this with the ```listen``` method.
