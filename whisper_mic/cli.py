@@ -24,7 +24,7 @@ def main(model: str, english: bool, verbose: bool, energy:  int, pause: float, d
     if list_devices:
         print("Possible devices: ",sr.Microphone.list_microphone_names())
         return
-    mic = WhisperMic(model=model, english=english, verbose=verbose, energy=energy, pause=pause, dynamic_energy=dynamic_energy, save_file=save_file, device=device,mic_index=None)
+    mic = WhisperMic(model=model, english=english, verbose=verbose, energy=energy, pause=pause, dynamic_energy=dynamic_energy, save_file=save_file, device=device,mic_index=mic_index)
     if not loop:
         result = mic.listen()
         print("You said: " + result)
