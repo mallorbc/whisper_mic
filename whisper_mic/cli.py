@@ -2,6 +2,8 @@
 
 import click
 import torch
+import speech_recognition as sr
+from typing import Optional
 
 from whisper_mic.whisper_mic import WhisperMic
 
@@ -16,8 +18,13 @@ from whisper_mic.whisper_mic import WhisperMic
 @click.option("--save_file",default=False, help="Flag to save file", is_flag=True,type=bool)
 @click.option("--loop", default=False, help="Flag to loop", is_flag=True,type=bool)
 @click.option("--dictate", default=False, help="Flag to dictate (implies loop)", is_flag=True,type=bool)
-def main(model: str, english: bool, verbose: bool, energy:  int, pause: float, dynamic_energy: bool, save_file: bool, device: str, loop: bool, dictate: bool) -> None:
-    mic = WhisperMic(model=model, english=english, verbose=verbose, energy=energy, pause=pause, dynamic_energy=dynamic_energy, save_file=save_file, device=device)
+@click.option("--mic_index", default=None, help="Mic index to use", type=int)
+@click.option("--list_devices",default=False, help="Flag to list devices", is_flag=True,type=bool)
+def main(model: str, english: bool, verbose: bool, energy:  int, pause: float, dynamic_energy: bool, save_file: bool, device: str, loop: bool, dictate: bool,mic_index:Optional[int],list_devices:bool) -> None:
+    if list_devices:
+        print("Possible devices: ",sr.Microphone.list_microphone_names())
+        return
+    mic = WhisperMic(model=model, english=english, verbose=verbose, energy=energy, pause=pause, dynamic_energy=dynamic_energy, save_file=save_file, device=device,mic_index=None)
     if not loop:
         result = mic.listen()
         print("You said: " + result)

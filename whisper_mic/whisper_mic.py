@@ -16,7 +16,7 @@ from whisper_mic.utils import get_logger
 
 
 class WhisperMic:
-    def __init__(self,model="base",device=("cuda" if torch.cuda.is_available() else "cpu"),english=False,verbose=False,energy=300,pause=0.8,dynamic_energy=False,save_file=False, model_root="~/.cache/whisper"):
+    def __init__(self,model="base",device=("cuda" if torch.cuda.is_available() else "cpu"),english=False,verbose=False,energy=300,pause=0.8,dynamic_energy=False,save_file=False, model_root="~/.cache/whisper",mic_index=None):
         self.logger = get_logger("whisper_mic", "info")
         self.energy = energy
         self.pause = pause
@@ -48,11 +48,13 @@ class WhisperMic:
 
         self.banned_results = [""," ","\n",None]
 
-        self.setup_mic()
+        self.setup_mic(mic_index)
 
 
-    def setup_mic(self):
-        self.source = sr.Microphone(sample_rate=16000)
+    def setup_mic(self, mic_index):
+        if mic_index is None:
+            self.logger.info("No mic index provided, using default")
+        self.source = sr.Microphone(sample_rate=16000, device_index=mic_index)
 
         self.recorder = sr.Recognizer()
         self.recorder.energy_threshold = self.energy
