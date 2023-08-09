@@ -27,7 +27,7 @@ dependencies = [
     "pyaudio",
     "pydantic",
     "pydub",
-    "pynput"
+    "pynput",
     "requests",
     "rich",
     "speechrecognition",
