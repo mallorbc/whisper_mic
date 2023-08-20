@@ -83,12 +83,16 @@ class WhisperMic:
 
     # Handles the task of getting the audio input via microphone. This method has been used both for listen() method and for the __transcribe_forever() method (which has been used for implementing the listen_loop() method)
     def __listen_handler(self, timeout, phrase_time_limit):
-        with self.source as microphone:
-            audio = self.recorder.listen(source=microphone, timeout=timeout, phrase_time_limit=phrase_time_limit)
-        
-        self.__record_load(audio)
-        audio_data = self.__get_all_audio()
-        self.__transcribe(data=audio_data)
+        try:
+            with self.source as microphone:
+                audio = self.recorder.listen(source=microphone, timeout=timeout, phrase_time_limit=phrase_time_limit)
+            self.__record_load(audio)
+            audio_data = self.__get_all_audio()
+            self.__transcribe(data=audio_data)
+        except sr.WaitTimeoutError:
+            self.result_queue.put_nowait("Timeout: No speech detected within the specified time.")
+        except sr.UnknownValueError:
+            self.result_queue.put_nowait("Speech recognition could not understand audio.")
 
 
     # This method is similar to the __listen_handler() method but it has the added ability for recording the audio for a specified duration of time
