@@ -5,6 +5,7 @@ import speech_recognition as sr
 import threading
 import numpy as np
 import os
+import time
 import tempfile
 import platform
 import pynput.keyboard
@@ -42,13 +43,14 @@ class WhisperMic:
         
         self.break_threads = False
         self.mic_active = False
+        self.mic_index = mic_index
 
         self.banned_results = [""," ","\n",None]
 
-        self.__setup_mic(mic_index)
+        self.__setup_mic(self.mic_index, False, True, 2)
 
 
-    def __setup_mic(self, mic_index):
+    def __setup_mic(self, mic_index, listen_loop_flag, show_log, phrase_time_limit):
         if mic_index is None:
             self.logger.info("No mic index provided, using default")
         self.source = sr.Microphone(sample_rate=16000, device_index=mic_index)
@@ -61,17 +63,21 @@ class WhisperMic:
         with self.source:
             self.recorder.adjust_for_ambient_noise(self.source)
 
-        self.logger.info("Mic setup complete")
+        if listen_loop_flag == True:
+            self.recorder.listen_in_background(self.source, self.__record_load, phrase_time_limit=phrase_time_limit)
+        if show_log == True:
+            self.logger.info("Mic setup complete")
 
 
     def __preprocess(self, data):
         return torch.from_numpy(np.frombuffer(data, np.int16).flatten().astype(np.float32) / 32768.0)
 
     
-    def __get_all_audio(self):
+    def __get_all_audio(self, min_time: float = -1.):
         audio = bytes()
         got_audio = False
-        while not got_audio:
+        time_start = time.time()
+        while not got_audio or time.time() - time_start < min_time:
             while not self.audio_queue.empty():
                 audio += self.audio_queue.get()
                 got_audio = True
@@ -81,12 +87,12 @@ class WhisperMic:
         return data
     
 
-    # Handles the task of getting the audio input via microphone. This method has been used both for listen() method and for the __transcribe_forever() method (which has been used for implementing the listen_loop() method)
+    # Handles the task of getting the audio input via microphone. This method has been used for listen() method
     def __listen_handler(self, timeout, phrase_time_limit):
         try:
             with self.source as microphone:
                 audio = self.recorder.listen(source=microphone, timeout=timeout, phrase_time_limit=phrase_time_limit)
-            self.__record_load(audio)
+            self.__record_load(0, audio)
             audio_data = self.__get_all_audio()
             self.__transcribe(data=audio_data)
         except sr.WaitTimeoutError:
@@ -100,22 +106,22 @@ class WhisperMic:
         with self.source as microphone:
             audio = self.recorder.record(source=microphone, duration=duration, offset=offset)
         
-        self.__record_load(audio)
+        self.__record_load(0, audio)
         audio_data = self.__get_all_audio()
         self.__transcribe(data=audio_data)
 
 
     # This method takes the recorded audio data, converts it into raw format and stores it in a queue. 
-    def __record_load(self, audio: sr.AudioData) -> None:
+    def __record_load(self,_, audio: sr.AudioData) -> None:
         data = audio.get_raw_data()
         self.audio_queue.put_nowait(data)
 
 
-    def __transcribe_forever(self,timeout, phrase_time_limit) -> None:
+    def __transcribe_forever(self) -> None:
         while True:
             if self.break_threads:
                 break
-            self.__listen_handler(timeout, phrase_time_limit)
+            self.__transcribe()
 
 
     def __transcribe(self,data=None, realtime: bool = False) -> None:
@@ -141,9 +147,10 @@ class WhisperMic:
             os.remove(audio_data)
 
 
-    def listen_loop(self, dictate: bool = False, timeout=None, phrase_time_limit=None) -> None:
+    def listen_loop(self, dictate: bool = False, phrase_time_limit=2) -> None:
+        self.__setup_mic(self.mic_index, True, False, phrase_time_limit)
         self.logger.info("Listening...")
-        threading.Thread(target=self.__transcribe_forever, args=(timeout, phrase_time_limit)).start()
+        threading.Thread(target=self.__transcribe_forever).start()
         while True:
             result = self.result_queue.get()
             if dictate:
