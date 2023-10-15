@@ -121,7 +121,7 @@ class WhisperMic:
 
 
     def listen_loop(self, dictate: bool = False) -> None:
-        threading.Thread(target=self.transcribe_forever).start()
+        threading.Thread(target=self.transcribe_forever, daemon=True).start()
         while True:
             result = self.result_queue.get()
             if dictate:
