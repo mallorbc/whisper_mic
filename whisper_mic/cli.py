@@ -29,7 +29,7 @@ def main(model: str, english: bool, verbose: bool, energy:  int, pause: float, d
         result = mic.listen()
         print("You said: " + result)
     else:
-        mic.listen_loop(dictate=dictate)
+        mic.listen_loop(dictate=dictate,phrase_time_limit=2)
 
 if __name__ == "__main__":
     main()
