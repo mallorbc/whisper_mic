@@ -10,7 +10,7 @@ import tempfile
 import platform
 import pynput.keyboard
 
-from whisper_mic.utils import get_logger
+from utils import get_logger
 
 
 class WhisperMic:
