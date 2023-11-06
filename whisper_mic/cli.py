@@ -26,10 +26,22 @@ def main(model: str, english: bool, verbose: bool, energy:  int, pause: float, d
         return
     mic = WhisperMic(model=model, english=english, verbose=verbose, energy=energy, pause=pause, dynamic_energy=dynamic_energy, save_file=save_file, device=device,mic_index=mic_index)
     if not loop:
-        result = mic.listen()
-        print("You said: " + result)
+        try:
+            result = mic.listen()
+            print("You said: " + result)
+        except KeyboardInterrupt:
+            print("Operation interrupted successfully")
+        finally:
+            if save_file:
+                mic.file.close()
     else:
-        mic.listen_loop(dictate=dictate,phrase_time_limit=2)
+        try:
+            mic.listen_loop(dictate=dictate,phrase_time_limit=2)
+        except KeyboardInterrupt:
+            print("Operation interrupted successfully")
+        finally:
+            if save_file:
+                mic.file.close()
 
 if __name__ == "__main__":
     main()

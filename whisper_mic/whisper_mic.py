@@ -46,6 +46,9 @@ class WhisperMic:
 
         self.banned_results = [""," ","\n",None]
 
+        if save_file:
+            self.file = open("transcribed_text.txt", "w+", encoding="utf-8")
+
         self.__setup_mic(mic_index)
 
 
@@ -140,7 +143,8 @@ class WhisperMic:
                 self.result_queue.put_nowait(result)
 
         if self.save_file:
-            os.remove(audio_data)
+            # os.remove(audio_data)
+            self.file.write(predicted_text)
 
 
     def listen_loop(self, dictate: bool = False, phrase_time_limit=None) -> None:
