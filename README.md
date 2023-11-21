@@ -48,7 +48,7 @@ Using the command: ```whisper_mic --loop --dictate``` will type the words you sa
 You can use this code in other projects rather than just use it for a demo.  You can do this with the ```listen``` method.
 
 ```python
-from whisper_mic.whisper_mic import WhisperMic
+from whisper_mic import WhisperMic
 
 mic = WhisperMic()
 result = mic.listen()
