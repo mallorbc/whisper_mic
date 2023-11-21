@@ -5,7 +5,7 @@ import torch
 import speech_recognition as sr
 from typing import Optional
 
-from whisper_mic import WhisperMic
+from whisper_mic.whisper_mic import WhisperMic
 
 @click.command()
 @click.option("--model", default="base", help="Model to use", type=click.Choice(["tiny","base", "small","medium","large","large-v2"]))
