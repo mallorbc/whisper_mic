@@ -10,7 +10,7 @@ import tempfile
 import platform
 import pynput.keyboard
 
-from whisper_mic.utils import get_logger
+from utils import get_logger
 
 
 class WhisperMic:
@@ -45,6 +45,9 @@ class WhisperMic:
         self.mic_active = False
 
         self.banned_results = [""," ","\n",None]
+
+        if save_file:
+            self.file = open("transcribed_text.txt", "w+", encoding="utf-8")
 
         self.__setup_mic(mic_index)
 
@@ -140,13 +143,14 @@ class WhisperMic:
                 self.result_queue.put_nowait(result)
 
         if self.save_file:
-            os.remove(audio_data)
+            # os.remove(audio_data)
+            self.file.write(predicted_text)
 
 
     def listen_loop(self, dictate: bool = False, phrase_time_limit=None) -> None:
         self.recorder.listen_in_background(self.source, self.__record_load, phrase_time_limit=phrase_time_limit)
         self.logger.info("Listening...")
-        threading.Thread(target=self.__transcribe_forever).start()
+        threading.Thread(target=self.__transcribe_forever, daemon=True).start()
         
         while True:
             result = self.result_queue.get()
