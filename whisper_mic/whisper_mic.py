@@ -43,6 +43,8 @@ class WhisperMic:
         if (model != "large" and model != "large-v2") and self.english:
             model = model + ".en"
 
+        model_root = os.path.expanduser(model_root)
+
         if (implementation == "faster_whisper"):
             from faster_whisper import WhisperModel
             self.faster = True
