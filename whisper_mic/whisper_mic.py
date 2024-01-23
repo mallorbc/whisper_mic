@@ -1,5 +1,4 @@
 import torch
-import whisper
 import queue
 import speech_recognition as sr
 import threading
@@ -14,9 +13,10 @@ from whisper_mic.utils import get_logger
 
 
 class WhisperMic:
-    def __init__(self,model="base",device=("cuda" if torch.cuda.is_available() else "cpu"),english=False,verbose=False,energy=300,pause=2,dynamic_energy=False,save_file=False, model_root="~/.cache/whisper",mic_index=None):
+    def __init__(self,model="base",device=("cuda" if torch.cuda.is_available() else "cpu"),english=False,verbose=False,energy=300,pause=2,dynamic_energy=False,save_file=False, model_root="~/.cache/whisper",mic_index=None,implementation="whisper",hallucinate_threshold=300):
         self.logger = get_logger("whisper_mic", "info")
         self.energy = energy
+        self.hallucinate_threshold = hallucinate_threshold
         self.pause = pause
         self.dynamic_energy = dynamic_energy
         self.save_file = save_file
@@ -34,8 +34,18 @@ class WhisperMic:
 
         if (model != "large" and model != "large-v2") and self.english:
             model = model + ".en"
+
+        model_root = os.path.expanduser(model_root)
+
+        if (implementation == "faster_whisper"):
+            from faster_whisper import WhisperModel
+            self.faster = True
+            self.audio_model = WhisperModel(model, download_root=model_root, device="auto", compute_type="int8")
+        else:
+            import whisper
+            self.faster = False
+            self.audio_model = whisper.load_model(model, download_root=model_root).to(device)
         
-        self.audio_model = whisper.load_model(model, download_root=model_root).to(device)
         self.temp_dir = tempfile.mkdtemp() if save_file else None
 
         self.audio_queue = queue.Queue()
@@ -67,10 +77,18 @@ class WhisperMic:
 
         self.logger.info("Mic setup complete")
 
-
+    # Whisper takes a Tensor while faster_whisper only wants an NDArray
     def __preprocess(self, data):
-        return torch.from_numpy(np.frombuffer(data, np.int16).flatten().astype(np.float32) / 32768.0)
-
+        is_audio_loud_enough = self.is_audio_loud_enough(data)
+        if self.faster:
+            return np.frombuffer(data, np.int16).flatten().astype(np.float32) / 32768.0,is_audio_loud_enough
+        else:
+            return torch.from_numpy(np.frombuffer(data, np.int16).flatten().astype(np.float32) / 32768.0),is_audio_loud_enough
+        
+    def is_audio_loud_enough(self, frame):
+        audio_frame = np.frombuffer(frame, dtype=np.int16)
+        amplitude = np.mean(np.abs(audio_frame))
+        return amplitude > self.hallucinate_threshold
     
     def __get_all_audio(self, min_time: float = -1.):
         audio = bytes()
@@ -128,23 +146,32 @@ class WhisperMic:
             audio_data = self.__get_all_audio()
         else:
             audio_data = data
-        audio_data = self.__preprocess(audio_data)
-        if self.english:
-            result = self.audio_model.transcribe(audio_data,language='english',suppress_tokens="")
-        else:
-            result = self.audio_model.transcribe(audio_data,suppress_tokens="")
+        audio_data,is_audio_loud_enough = self.__preprocess(audio_data)
 
-        predicted_text = result["text"]
-        if not self.verbose:
-            if predicted_text not in self.banned_results:
-                self.result_queue.put_nowait(predicted_text)
-        else:
-            if predicted_text not in self.banned_results:
-                self.result_queue.put_nowait(result)
+        if is_audio_loud_enough:
+            # faster_whisper returns an iterable object rather than a string
+            if self.faster:
+                segments, info = self.audio_model.transcribe(audio_data)
+                predicted_text = ''
+                for segment in segments:
+                    predicted_text += segment.text
+            else:
+                if self.english:
+                    result = self.audio_model.transcribe(audio_data,language='english',suppress_tokens="")
+                else:
+                    result = self.audio_model.transcribe(audio_data,suppress_tokens="")
+                    predicted_text = result["text"]
 
-        if self.save_file:
-            # os.remove(audio_data)
-            self.file.write(predicted_text)
+            if not self.verbose:
+                if predicted_text not in self.banned_results:
+                    self.result_queue.put_nowait(predicted_text)
+            else:
+                if predicted_text not in self.banned_results:
+                    self.result_queue.put_nowait(result)
+
+            if self.save_file:
+                # os.remove(audio_data)
+                self.file.write(predicted_text)
 
 
     def listen_loop(self, dictate: bool = False, phrase_time_limit=None) -> None:
@@ -152,7 +179,7 @@ class WhisperMic:
             if dictate:
                 self.keyboard.type(result)
             else:
-                print(result)
+                pass
 
 
     def listen_continuously(self, phrase_time_limit=None):
