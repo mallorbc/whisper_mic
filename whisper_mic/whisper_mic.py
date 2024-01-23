@@ -130,9 +130,9 @@ class WhisperMic:
             audio_data = data
         audio_data = self.__preprocess(audio_data)
         if self.english:
-            result = self.audio_model.transcribe(audio_data,language='english')
+            result = self.audio_model.transcribe(audio_data,language='english',suppress_tokens="")
         else:
-            result = self.audio_model.transcribe(audio_data)
+            result = self.audio_model.transcribe(audio_data,suppress_tokens="")
 
         predicted_text = result["text"]
         if not self.verbose:
