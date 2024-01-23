@@ -1,5 +1,4 @@
 import torch
-import whisper
 import queue
 import speech_recognition as sr
 import threading
@@ -9,12 +8,21 @@ import time
 import tempfile
 import platform
 import pynput.keyboard
+from ctypes import *
 
 from whisper_mic.utils import get_logger
 
+# Define a null error handler for libasound to silence the error message spam
+def py_error_handler(filename, line, function, err, fmt):
+    None
 
+ERROR_HANDLER_FUNC = CFUNCTYPE(None, c_char_p, c_int, c_char_p, c_int, c_char_p)
+c_error_handler = ERROR_HANDLER_FUNC(py_error_handler)
+
+asound = cdll.LoadLibrary('libasound.so')
+asound.snd_lib_error_set_handler(c_error_handler)
 class WhisperMic:
-    def __init__(self,model="base",device=("cuda" if torch.cuda.is_available() else "cpu"),english=False,verbose=False,energy=300,pause=2,dynamic_energy=False,save_file=False, model_root="~/.cache/whisper",mic_index=None):
+    def __init__(self,model="base",device=("cuda" if torch.cuda.is_available() else "cpu"),english=False,verbose=False,energy=300,pause=2,dynamic_energy=False,save_file=False, model_root="~/.cache/whisper",mic_index=None,implementation="whisper"):
         self.logger = get_logger("whisper_mic", "info")
         self.energy = energy
         self.pause = pause
@@ -34,8 +42,18 @@ class WhisperMic:
 
         if (model != "large" and model != "large-v2") and self.english:
             model = model + ".en"
+
+        model_root = os.path.expanduser(model_root)
+
+        if (implementation == "faster_whisper"):
+            from faster_whisper import WhisperModel
+            self.faster = True
+            self.audio_model = WhisperModel(model, download_root=model_root, device="auto", compute_type="int8")
+        else:
+            import whisper
+            self.faster = False
+            self.audio_model = whisper.load_model(model, download_root=model_root).to(device)
         
-        self.audio_model = whisper.load_model(model, download_root=model_root).to(device)
         self.temp_dir = tempfile.mkdtemp() if save_file else None
 
         self.audio_queue = queue.Queue()
@@ -67,9 +85,12 @@ class WhisperMic:
 
         self.logger.info("Mic setup complete")
 
-
+    # Whisper takes a Tensor while faster_whisper only wants an NDArray
     def __preprocess(self, data):
-        return torch.from_numpy(np.frombuffer(data, np.int16).flatten().astype(np.float32) / 32768.0)
+        if self.faster:
+            return np.frombuffer(data, np.int16).flatten().astype(np.float32) / 32768.0
+        else:
+            return torch.from_numpy(np.frombuffer(data, np.int16).flatten().astype(np.float32) / 32768.0)
 
     
     def __get_all_audio(self, min_time: float = -1.):
@@ -129,12 +150,21 @@ class WhisperMic:
         else:
             audio_data = data
         audio_data = self.__preprocess(audio_data)
-        if self.english:
-            result = self.audio_model.transcribe(audio_data,language='english',suppress_tokens="")
-        else:
-            result = self.audio_model.transcribe(audio_data,suppress_tokens="")
 
-        predicted_text = result["text"]
+        # faster_whisper returns an iterable object rather than a string
+        if self.faster:
+            segments, info = self.audio_model.transcribe(audio_data)
+            predicted_text = ''
+            for segment in segments:
+                predicted_text += segment.text
+        else:
+            if self.english:
+                result = self.audio_model.transcribe(audio_data,language='english')
+            else:
+                result = self.audio_model.transcribe(audio_data)
+                predicted_text = result["text"]
+
+
         if not self.verbose:
             if predicted_text not in self.banned_results:
                 self.result_queue.put_nowait(predicted_text)
