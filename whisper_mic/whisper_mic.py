@@ -8,19 +8,20 @@ import time
 import tempfile
 import platform
 import pynput.keyboard
-from ctypes import *
+# from ctypes import *
 
 from whisper_mic.utils import get_logger
 
+#TODO: This is a linux only fix and needs to be testd.  Have one for mac and windows too.
 # Define a null error handler for libasound to silence the error message spam
-def py_error_handler(filename, line, function, err, fmt):
-    None
+# def py_error_handler(filename, line, function, err, fmt):
+#     None
 
-ERROR_HANDLER_FUNC = CFUNCTYPE(None, c_char_p, c_int, c_char_p, c_int, c_char_p)
-c_error_handler = ERROR_HANDLER_FUNC(py_error_handler)
+# ERROR_HANDLER_FUNC = CFUNCTYPE(None, c_char_p, c_int, c_char_p, c_int, c_char_p)
+# c_error_handler = ERROR_HANDLER_FUNC(py_error_handler)
 
-asound = cdll.LoadLibrary('libasound.so')
-asound.snd_lib_error_set_handler(c_error_handler)
+# asound = cdll.LoadLibrary('libasound.so')
+# asound.snd_lib_error_set_handler(c_error_handler)
 class WhisperMic:
     def __init__(self,model="base",device=("cuda" if torch.cuda.is_available() else "cpu"),english=False,verbose=False,energy=300,pause=2,dynamic_energy=False,save_file=False, model_root="~/.cache/whisper",mic_index=None,implementation="whisper",hallucinate_threshold=300):
 
@@ -48,9 +49,15 @@ class WhisperMic:
         model_root = os.path.expanduser(model_root)
 
         if (implementation == "faster_whisper"):
-            from faster_whisper import WhisperModel
-            self.faster = True
-            self.audio_model = WhisperModel(model, download_root=model_root, device="auto", compute_type="int8")
+            try:
+                from faster_whisper import WhisperModel
+                self.faster = True
+                self.audio_model = WhisperModel(model, download_root=model_root, device="auto", compute_type="int8")            
+            except ImportError:
+                self.logger.error("faster_whisper not installed, falling back to whisper")
+                import whisper
+                self.audio_model = whisper.load_model(model, download_root=model_root).to(device)
+
         else:
             import whisper
             self.faster = False
@@ -191,7 +198,7 @@ class WhisperMic:
             if dictate:
                 self.keyboard.type(result)
             else:
-                pass
+                print(result)
 
 
     def listen_continuously(self, phrase_time_limit=None):
