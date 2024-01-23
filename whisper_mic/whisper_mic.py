@@ -148,16 +148,20 @@ class WhisperMic:
 
 
     def listen_loop(self, dictate: bool = False, phrase_time_limit=None) -> None:
-        self.recorder.listen_in_background(self.source, self.__record_load, phrase_time_limit=phrase_time_limit)
-        self.logger.info("Listening...")
-        threading.Thread(target=self.__transcribe_forever, daemon=True).start()
-        
-        while True:
-            result = self.result_queue.get()
+        for result in self.listen_continuously(phrase_time_limit=phrase_time_limit):
             if dictate:
                 self.keyboard.type(result)
             else:
                 print(result)
+
+
+    def listen_continuously(self, phrase_time_limit=None):
+        self.recorder.listen_in_background(self.source, self.__record_load, phrase_time_limit=phrase_time_limit)
+        self.logger.info("Listening...")
+        threading.Thread(target=self.__transcribe_forever, daemon=True).start()
+
+        while True:
+            yield self.result_queue.get()
 
             
     def listen(self, timeout = None, phrase_time_limit=None):
