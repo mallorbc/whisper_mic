@@ -27,6 +27,7 @@ def main(model: str, english: bool, verbose: bool, energy:  int, pause: float, d
         print("Possible devices: ",sr.Microphone.list_microphone_names())
         return
     mic = WhisperMic(model=model, english=english, verbose=verbose, energy=energy, pause=pause, dynamic_energy=dynamic_energy, save_file=save_file, device=device,mic_index=mic_index,implementation=("faster_whisper" if faster else "whisper"),hallucinate_threshold=hallucinate_threshold)
+
     if not loop:
         try:
             result = mic.listen()
