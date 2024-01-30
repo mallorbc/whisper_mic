@@ -69,7 +69,7 @@ sudo apt install portaudio19-dev python3-pyaudio
 Some ideas that you can add are:
 1. Supporting different implementations of Whisper
 2. Adding additional optional functionality.
-3. Use Pyaudio to get the audio for the listen method to speed things up
+3. Add tests
 
 ## License
 
