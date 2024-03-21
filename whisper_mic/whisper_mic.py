@@ -192,6 +192,13 @@ class WhisperMic:
                 # os.remove(audio_data)
                 self.file.write(predicted_text)
 
+    async def listen_loop_async(self, dictate: bool = False, phrase_time_limit=None) -> None:
+        for result in self.listen_continuously(phrase_time_limit=phrase_time_limit):
+            if dictate:
+                self.keyboard.type(result)
+            else:
+                yield result
+
 
     def listen_loop(self, dictate: bool = False, phrase_time_limit=None) -> None:
         for result in self.listen_continuously(phrase_time_limit=phrase_time_limit):
