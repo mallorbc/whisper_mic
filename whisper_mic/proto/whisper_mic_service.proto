@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package whisper_mic_service;
+
+service WhisperMic {
+  rpc StreamData (stream AudioData) returns (stream Transcription) {}
+}
+
+message AudioData {
+  bytes ndarray_bytes = 1;
+}
+
+message Transcription {
+  string prediction = 1;
+}
