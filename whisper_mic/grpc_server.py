@@ -5,16 +5,18 @@ import numpy as np
 from concurrent import futures
 from faster_whisper import WhisperModel
 
+faster_whisper_model = WhisperModel('large-v3', device='cuda', compute_type='float16')
+
 
 class WhisperMicServicer(whisper_mic_service_pb2_grpc.WhisperMicServicer):
     def StreamData(self, request_iterator, context):
         banned_results = {'', ' ', '\n', None}
-        faster_whisper_model = WhisperModel('large-v3', device='cuda', compute_type='float16')
 
         for request in request_iterator:
             ndarray = np.frombuffer(request.ndarray_bytes, dtype=np.float32)
             print(f"Received data from client!")
 
+            global faster_whisper_model
             segments, _ = faster_whisper_model.transcribe(ndarray, language='ja')
             # del faster_whisper_model
             predicted_text = ''.join(segment.text for segment in segments)

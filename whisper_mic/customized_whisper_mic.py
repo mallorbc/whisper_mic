@@ -70,7 +70,7 @@ class CustomizedWhisperMic:
         time_start = time.time()
         while not got_audio or time.time() - time_start < min_time:
             while not self.audio_queue.empty():
-                audio_bytes += self.audio_queue.get()
+                audio_bytes += self.audio_queue.get_nowait()
                 got_audio = True
 
         return sr.AudioData(audio_bytes, sample_rate=16000, sample_width=2).get_raw_data()
