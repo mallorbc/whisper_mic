@@ -1,11 +1,13 @@
-import torch
+from concurrent import futures
+
 import click
 import grpc
+import numpy as np
+import torch
+from faster_whisper import WhisperModel
+
 import faster_whisper_transcription_pb2
 import faster_whisper_transcription_pb2_grpc
-import numpy as np
-from concurrent import futures
-from faster_whisper import WhisperModel
 
 faster_whisper_model = object()
 

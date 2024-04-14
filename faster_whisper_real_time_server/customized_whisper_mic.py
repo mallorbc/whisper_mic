@@ -1,11 +1,13 @@
-import grpc
-import numpy as np
 import queue
-import speech_recognition as sr
 import threading
 import time
 import typing
+
+import grpc
+import numpy as np
+import speech_recognition as sr
 from faster_whisper import WhisperModel
+
 import faster_whisper_transcription_pb2
 import faster_whisper_transcription_pb2_grpc
 

@@ -1,6 +1,8 @@
+import typing
+
 import click
 import pyaudio
-import typing
+
 from customized_whisper_mic import CustomizedWhisperMic
 
 
