@@ -6,6 +6,7 @@ import pyaudio
 from customized_whisper_mic import CustomizedWhisperMic
 
 
+# pylint: disable=no-value-for-parameter
 @click.command()
 @click.option('--language', default=None, help='Determine the prior language to detect', type=str)
 @click.option('--energy', default=300, help='Energy level for mic to detect', type=int)
@@ -33,8 +34,8 @@ def main(
 ) -> None:
     if list_devices:
         py_audio_instance = pyaudio.PyAudio()
-        for mic_index in range(py_audio_instance.get_device_count()):
-            print(f'{mic_index}: {py_audio_instance.get_device_info_by_index(mic_index).get("name")}')
+        for hardware_mic_index in range(py_audio_instance.get_device_count()):
+            print(f'{hardware_mic_index}: {py_audio_instance.get_device_info_by_index(hardware_mic_index).get("name")}')
 
         return
 

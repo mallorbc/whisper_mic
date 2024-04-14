@@ -1,0 +1,26 @@
+[MASTER]
+init-hook='import sys; sys.path.append(".")'
+disable=
+    C0111, # Missing docstring
+    R0903, # Too few public methods
+    W0603, # Using the global statement
+    W0703, # Broad except clause
+    E1101, # No member for base class
+
+[FORMAT]
+max-line-length=160
+
+[SIMILARITIES]
+ignore-comments=yes
+ignore-docstrings=yes
+ignore-imports=yes
+
+[DESIGN]
+max-args=12
+max-attributes=10
+max-locals=20
+max-returns=6
+max-branches=12
+max-statements=50
+max-parents=7
+max-module-lines=1000

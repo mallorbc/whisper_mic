@@ -36,6 +36,11 @@ class CustomizedWhisperMic:
 
         self.hallucinate_threshold = hallucinate_threshold
         self.audio_queue = queue.Queue()
+        # The following attributes are only used in local mode
+        self.banned_results = None
+        self.result_queue: None
+        self.faster_whisper_model = None
+        self.predicted_language = None
 
     def listen_and_transcribe(
         self,
@@ -54,7 +59,7 @@ class CustomizedWhisperMic:
         else:
             self._transcribe_by_grpc(language, grpc_address)
 
-    # This method takes the recorded audio data, converts it into raw format and stores it in a queue. 
+    # This method takes the recorded audio data, converts it into raw format and stores it in a queue.
     def _record_load(self, _, audio: sr.AudioData) -> None:
         data = audio.get_raw_data()
         self.audio_queue.put_nowait(data)
@@ -127,7 +132,7 @@ class CustomizedWhisperMic:
 
     def _get_audio_ndarray_from_raw_data(self, audio_raw_data) -> typing.Optional[np.ndarray]:
         if not self._is_audio_loud_enough(audio_raw_data):
-            return
+            return None
 
         return np.frombuffer(audio_raw_data, np.int16).flatten().astype(np.float32) / 32768.0
 
