@@ -1,13 +1,13 @@
-import torch
+import grpc
+import numpy as np
 import queue
-import typing
 import speech_recognition as sr
 import threading
-import numpy as np
 import time
-import whisper_mic_service_pb2
-import whisper_mic_service_pb2_grpc
-import grpc
+import typing
+from faster_whisper import WhisperModel
+import faster_whisper_transcription_pb2
+import faster_whisper_transcription_pb2_grpc
 
 
 class CustomizedWhisperMic:
@@ -35,27 +35,75 @@ class CustomizedWhisperMic:
         self.hallucinate_threshold = hallucinate_threshold
         self.audio_queue = queue.Queue()
 
-    def listen_and_transcribe(self, phrase_time_limit=None) -> None:
+    def listen_and_transcribe(
+        self,
+        language: typing.Optional[str],
+        grpc_address: typing.Optional[str],
+        model: typing.Optional[str],
+        device: typing.Optional[str],
+        precision: typing.Optional[str],
+        phrase_time_limit: typing.Optional[int] = None,
+    ) -> None:
         self.recorder.listen_in_background(self.source, self._record_load, phrase_time_limit=phrase_time_limit)
         print('[INFO] Listening...')
-        self._transcribe_by_grpc()
+        if grpc_address is None:
+            self._transcribe_locally(language, model, device, precision)
+
+        else:
+            self._transcribe_by_grpc(language, grpc_address)
 
     # This method takes the recorded audio data, converts it into raw format and stores it in a queue. 
     def _record_load(self, _, audio: sr.AudioData) -> None:
         data = audio.get_raw_data()
         self.audio_queue.put_nowait(data)
 
-    def _transcribe_by_grpc(self) -> None:
-        with grpc.insecure_channel("localhost:50051") as channel:
-            stub = whisper_mic_service_pb2_grpc.WhisperMicStub(channel)
+    def _transcribe_locally(
+        self,
+        language: typing.Optional[str],
+        model: typing.Optional[str],
+        device: typing.Optional[str],
+        precision: typing.Optional[str],
+    ):
+        self.banned_results = {'', ' ', '\n', None}
+        self.result_queue: 'queue.Queue[str]' = queue.Queue()
+        self.faster_whisper_model = WhisperModel(model_size_or_path=model, device=device, compute_type=precision)
+        self.predicted_language = language
+
+        threading.Thread(target=self._push_predicted_result, daemon=True).start()
+
+        def pop_predicted_result():
+            while True:
+                yield self.result_queue.get()
+
+        for predicted_text in pop_predicted_result():
+            print(predicted_text)
+
+    def _push_predicted_result(self) -> None:
+        while True:
+            audio_ndarray: np.ndarray = self._get_audio_ndarray()
+            if audio_ndarray is None:
+                continue
+
+            segments, _ = self.faster_whisper_model.transcribe(audio_ndarray, language=self.predicted_language)
+            predicted_text = ''.join(segment.text for segment in segments)
+            if predicted_text not in self.banned_results:
+                self.result_queue.put_nowait(predicted_text)
+
+    def _transcribe_by_grpc(self, language: typing.Optional[str], grpc_address: typing.Optional[str]) -> None:
+        if language is None:
+            language = ''
+
+        with grpc.insecure_channel(grpc_address) as channel:
+            stub = faster_whisper_transcription_pb2_grpc.FasterWhisperTranscriptionStub(channel)
 
             def request_generator():
                 while True:
-                    audio_data: np.ndarray = self._get_audio_ndarray()
-                    if audio_data is None:
+                    audio_ndarray: np.ndarray = self._get_audio_ndarray()
+                    if audio_ndarray is None:
                         continue
 
-                    yield whisper_mic_service_pb2.AudioData(ndarray_bytes=audio_data.tobytes())
+                    nonlocal language
+                    yield faster_whisper_transcription_pb2.AudioData(ndarray_bytes=audio_ndarray.tobytes(), language=language)
 
             response_iterator = stub.StreamData(request_generator())
             for response in response_iterator:

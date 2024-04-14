@@ -2,10 +2,10 @@
 """Client and server classes corresponding to protobuf-defined services."""
 import grpc
 
-import whisper_mic_service_pb2 as whisper__mic__service__pb2
+import faster_whisper_transcription_pb2 as faster__whisper__transcription__pb2
 
 
-class WhisperMicStub(object):
+class FasterWhisperTranscriptionStub(object):
     """Missing associated documentation comment in .proto file."""
 
     def __init__(self, channel):
@@ -15,13 +15,13 @@ class WhisperMicStub(object):
             channel: A grpc.Channel.
         """
         self.StreamData = channel.stream_stream(
-                '/whisper_mic_service.WhisperMic/StreamData',
-                request_serializer=whisper__mic__service__pb2.AudioData.SerializeToString,
-                response_deserializer=whisper__mic__service__pb2.Transcription.FromString,
+                '/faster_whisper_transcription.FasterWhisperTranscription/StreamData',
+                request_serializer=faster__whisper__transcription__pb2.AudioData.SerializeToString,
+                response_deserializer=faster__whisper__transcription__pb2.Transcription.FromString,
                 )
 
 
-class WhisperMicServicer(object):
+class FasterWhisperTranscriptionServicer(object):
     """Missing associated documentation comment in .proto file."""
 
     def StreamData(self, request_iterator, context):
@@ -31,21 +31,21 @@ class WhisperMicServicer(object):
         raise NotImplementedError('Method not implemented!')
 
 
-def add_WhisperMicServicer_to_server(servicer, server):
+def add_FasterWhisperTranscriptionServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'StreamData': grpc.stream_stream_rpc_method_handler(
                     servicer.StreamData,
-                    request_deserializer=whisper__mic__service__pb2.AudioData.FromString,
-                    response_serializer=whisper__mic__service__pb2.Transcription.SerializeToString,
+                    request_deserializer=faster__whisper__transcription__pb2.AudioData.FromString,
+                    response_serializer=faster__whisper__transcription__pb2.Transcription.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'whisper_mic_service.WhisperMic', rpc_method_handlers)
+            'faster_whisper_transcription.FasterWhisperTranscription', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
 
 
  # This class is part of an EXPERIMENTAL API.
-class WhisperMic(object):
+class FasterWhisperTranscription(object):
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod
@@ -59,8 +59,8 @@ class WhisperMic(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.stream_stream(request_iterator, target, '/whisper_mic_service.WhisperMic/StreamData',
-            whisper__mic__service__pb2.AudioData.SerializeToString,
-            whisper__mic__service__pb2.Transcription.FromString,
+        return grpc.experimental.stream_stream(request_iterator, target, '/faster_whisper_transcription.FasterWhisperTranscription/StreamData',
+            faster__whisper__transcription__pb2.AudioData.SerializeToString,
+            faster__whisper__transcription__pb2.Transcription.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

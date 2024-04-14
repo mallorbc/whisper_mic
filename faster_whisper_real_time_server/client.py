@@ -1,34 +1,33 @@
-#!/usr/bin/env python3
-
 import click
-import torch
 import pyaudio
-from typing import Optional
+import typing
+from customized_whisper_mic import CustomizedWhisperMic
 
-from whisper_mic import WhisperMic
 
 @click.command()
-@click.option('--model', default='base', help='Model to use', type=click.Choice(['tiny','base', 'small','medium','large','large-v2','large-v3']))
-@click.option('--device', default=('cuda' if torch.cuda.is_available() else 'cpu'), help='Device to use', type=click.Choice(['cpu','cuda','mps']))
 @click.option('--language', default=None, help='Determine the prior language to detect', type=str)
 @click.option('--energy', default=300, help='Energy level for mic to detect', type=int)
 @click.option('--dynamic_energy', default=False, is_flag=True, help='Flag to enable dynamic energy')
 @click.option('--pause', default=0.8, help='Pause time before entry ends', type=float)
 @click.option('--mic_index', default=None, help='Mic index to use', type=int)
 @click.option('--list_devices', default=False, help='Flag to list devices', is_flag=True)
-@click.option('--faster', default=False, help='Use faster_whisper implementation', is_flag=True)
-@click.option('--hallucinate_threshold',default=400, help='Raise this to reduce hallucinations.  Lower this to activate more often.', type=int)
+@click.option('--hallucinate_threshold',default=400, help='Raise this to reduce hallucinations. Lower this to activate more often.', type=int)
+@click.option('--grpc_address', default=None, help='<ip_addr>:<port> or run locally by default', type=str)
+@click.option('--model', default=None, help='Model (`distil-large-v3` if en only)', type=click.Choice(['medium', 'large-v3', 'distil-large-v3']))
+@click.option('--device', default=None, help='Device', type=click.Choice(['cpu', 'cuda']))
+@click.option('--precision', default=None, help='Precision level', type=click.Choice(['int8', 'float16']))
 def main(
-    model: str,
     language: str,
     energy: int,
     pause: float,
     dynamic_energy: bool,
-    device: str,
-    mic_index: Optional[int],
+    mic_index: typing.Optional[int],
     list_devices: bool,
-    faster: bool,
     hallucinate_threshold: int,
+    grpc_address: typing.Optional[str],
+    model: str,
+    device: str,
+    precision: str,
 ) -> None:
     if list_devices:
         py_audio_instance = pyaudio.PyAudio()
@@ -37,20 +36,23 @@ def main(
 
         return
 
-    mic = WhisperMic(
-        model=model,
-        language=language,
+    mic = CustomizedWhisperMic(
         energy=energy,
         pause=pause,
         dynamic_energy=dynamic_energy,
-        device=device,
         mic_index=mic_index,
-        implementation=('faster_whisper' if faster else 'whisper'),
         hallucinate_threshold=hallucinate_threshold,
     )
 
     try:
-        mic.listen_loop(phrase_time_limit=2)
+        mic.listen_and_transcribe(
+            language=language,
+            grpc_address=grpc_address,
+            model=model,
+            device=device,
+            precision=precision,
+            phrase_time_limit=2,
+        )
 
     except KeyboardInterrupt:
         print('Interrupted by keyboard.')
