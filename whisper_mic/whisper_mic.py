@@ -219,7 +219,8 @@ class WhisperMic:
             
     def listen(self, timeout = None, phrase_time_limit=None):
         self.logger.info("Listening...")
-        self.__listen_handler(timeout, phrase_time_limit)
+        while self.result_queue.empty():
+            self.__listen_handler(timeout, phrase_time_limit)
         while True:
             if not self.result_queue.empty():
                 return self.result_queue.get()
@@ -228,7 +229,8 @@ class WhisperMic:
     # This method is similar to the listen() method, but it has the ability to listen for a specified duration, mentioned in the "duration" parameter.
     def record(self, duration=None, offset=None):
         self.logger.info("Listening...")
-        self.__record_handler(duration, offset)
+        while self.result_queue.empty():
+            self.__record_handler(duration, offset)
         while True:
             if not self.result_queue.empty():
                 return self.result_queue.get()
