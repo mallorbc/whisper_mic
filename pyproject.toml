@@ -1,40 +1,41 @@
-[build-system]
-requires = ["setuptools>=61.0"]
-build-backend = "setuptools.build_meta"
-
-[project]
+[tool.poetry]
 name = "whisper_mic"
 version = "1.4.2"
 authors = [
-  { name="Blake Mallory", email="blakecmallory@gmail.com" },
+  "Blake Mallory <blakecmallory@gmail.com>",
 ]
 description = "Whisper for your microphone"
 readme = "README.md"
-requires-python = ">=3.9"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
-dependencies = [
-    'importlib-metadata; python_version>"3.9"',
-    "attrs",
-    "click",
-    "ffmpeg-python",
-    "more-itertools",
-    "numpy",
-    "openai-whisper",
-    "pyaudio",
-    "pydantic",
-    "pydub",
-    "pynput",
-    "requests",
-    "rich",
-    "speechrecognition",
-    "tdqm",
-    "torch",
-    "transformers",
-]
 
-[project.scripts]
-whisper_mic = "whisper_mic.cli:main"
+[tool.poetry.dependencies]
+python = "^3.11.0"
+
+# attrs = "^23.2.0"
+click = "^8.1.7"
+ffmpeg-python= "0.2.0"
+# importlib-metadata = "^7.1.0"
+more-itertools = "^10.2.0"
+numpy = "^1.26.4"
+openai-whisper = "^20231117"
+pyaudio = "^0.2.14"  # has issues
+pydantic = "^2.7.1"
+pydub = "^0.25.1"
+pynput = "^1.7.6"
+# requests = "^2.31.0"
+# rich = "^13.7.1"
+speechrecognition = "^3.10.4"
+tqdm = "^4.66.4"
+torch = "^2.3.0"
+transformers = "^4.40.2"
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+# [project.scripts]
+# whisper_mic = "whisper_mic.cli:main"
