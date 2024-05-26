@@ -12,6 +12,7 @@ import pynput.keyboard
 
 from whisper_mic.utils import get_logger
 
+
 #TODO: This is a linux only fix and needs to be testd.  Have one for mac and windows too.
 # Define a null error handler for libasound to silence the error message spam
 # def py_error_handler(filename, line, function, err, fmt):

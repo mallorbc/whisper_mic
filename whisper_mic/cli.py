@@ -1,11 +1,10 @@
-#!/usr/bin/env python3
-
 import click
 import torch
 import speech_recognition as sr
 from typing import Optional
 
-from whisper_mic import WhisperMic
+from whisper_mic.whisper_mic import WhisperMic
+
 
 @click.command()
 @click.option("--model", default="base", help="Model to use", type=click.Choice(["tiny","base", "small","medium","large","large-v2","large-v3"]))
@@ -39,7 +38,7 @@ def main(model: str, english: bool, verbose: bool, energy:  int, pause: float, d
                 mic.file.close()
     else:
         try:
-            mic.listen_loop(dictate=dictate,phrase_time_limit=2)
+            mic.listen_loop(dictate=dictate,phrase_time_limit=60)
         except KeyboardInterrupt:
             print("Operation interrupted successfully")
         finally:
