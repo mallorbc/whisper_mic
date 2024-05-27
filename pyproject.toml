@@ -15,27 +15,125 @@ classifiers = [
 [tool.poetry.dependencies]
 python = "^3.11.0"
 
-# attrs = "^23.2.0"
 click = "^8.1.7"
 ffmpeg-python= "0.2.0"
-# importlib-metadata = "^7.1.0"
 more-itertools = "^10.2.0"
 numpy = "^1.26.4"
 openai-whisper = "^20231117"
-pyaudio = "^0.2.14"  # has issues
-pydantic = "^2.7.1"
+pyaudio = "^0.2.14"
 pydub = "^0.25.1"
 pynput = "^1.7.6"
-# requests = "^2.31.0"
 rich = "^13.7.1"
 speechrecognition = "^3.10.4"
 tqdm = "^4.66.4"
 torch = "^2.3.0"
 transformers = "^4.40.2"
 
+[tool.poetry.group.dev.dependencies]
+mypy = "1.10.0"
+pre-commit = "3.7.1"
+pre-commit-hooks = "4.6.0"
+ruff = "0.4.5"
+
+[tool.poetry.scripts]
+whisper_mic = "whisper_mic.cli:main"
+
 [build-system]
 requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
-# [project.scripts]
-# whisper_mic = "whisper_mic.cli:main"
+[tool.mypy]
+python_version = "3.11"
+
+check_untyped_defs = true
+disallow_untyped_defs = true
+incremental = false
+ignore_errors = false
+pretty = true
+show_error_context = true
+show_traceback = true
+strict_optional = true
+warn_incomplete_stub = true
+warn_no_return = true
+warn_redundant_casts = true
+warn_return_any = true
+warn_unreachable = true
+warn_unused_configs = true
+warn_unused_ignores = true
+
+[[tool.mypy.overrides]]
+module = [
+    "click.*",
+    "faster_whisper.*",
+    "numpy.*",
+    "pynput.*",
+    "rich.*",
+    "speech_recognition.*",
+    "torch.*",
+    "whisper.*",
+]
+ignore_missing_imports = true
+
+[tool.ruff]
+target-version = "py311"
+
+exclude = ["alembic"]
+indent-width = 4
+line-length = 110
+
+[tool.ruff.lint]
+# rules from: https://docs.astral.sh/ruff/rules/
+select = [
+    "ANN",  # flake8-annotations
+    "ASYNC",  # flake8-async
+    "S",  # flake8-bandit
+    "B",  # flake8-bugbear
+    "A",  # flake8-builtins
+    "COM",  # flake8-commas
+    "C4",  # flake8-comprehensions
+    "DTZ",  # flake8-datetimez
+    "EM",  # flake8-errmsg
+    "LOG",  # flake8-logging
+    "G",  # flake8-logging-format
+    "PIE",  # flake8-pie
+    "T20",  # flake8-print
+    "PT",  # flake8-pytest-style
+    "Q",  # flake8-quotes
+    "RSE",  # flake8-raise
+    "RET",  # flake8-return
+    "SIM",  # flake8-simplify
+    "TID",  # flake8-tidy-imports
+    "ARG",  # flake8-unused-arguments
+    "I",  # isort
+    "N",  # pep8-naming
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "F",  # pyflakes
+    "UP",  # pyupgrade
+    "RUF",  # Ruff-specific rules
+    "TRY",  # tryceratops
+]
+ignore = [
+    "ANN101",  # Missing type annotation for `self` in method
+    "B008",  # Do not perform function calls in argument defaults
+    "E501",  # Line too long, handled by black
+    "G004",  # Logging statements should not use f"..."
+    "W191",  # Indentation contains tabs
+]
+fixable = ["ALL"]
+unfixable = []
+# logger-objects = ["logging_setup.logger"]  # TODO: test first
+
+[tool.ruff.format]
+line-ending = "auto"
+quote-style = "double"
+skip-magic-trailing-comma = false
+
+[tool.ruff.lint.isort]
+# force-sort-within-sections = true  # TODO: test first
+lines-after-imports = 2
+lines-between-types = 1
+
+[tool.ruff.lint.pyupgrade]
+# Preserve types, even if a file imports `from __future__ import annotations`.
+keep-runtime-typing = true
