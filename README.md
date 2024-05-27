@@ -75,6 +75,8 @@ Some ideas that you can add are:
 2. Adding additional optional functionality.
 3. Add tests
 
+Be sure to run ```pre-commit install``` before making any changes and running it before committing with ```pre-commit run --all-files```.
+
 ## License
 
 The model weights of Whisper are released under the MIT License. See their repo for more information.
