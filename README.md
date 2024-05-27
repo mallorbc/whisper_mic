@@ -35,13 +35,15 @@ For English-only applications, the `.en` models tend to perform better, especial
 
 ## Microphone Demo
 
-You can use the model with a microphone using the ```whisper_mic``` program.  Use ```-h``` to see flag options.
+You can use the model with a microphone using the ```whisper_mic``` program.  Use ```--help``` to see flag options.
+
+> Example: ```python -m whisper_mic --help```
 
 Some of the more important flags are the ```--model``` and ```--english``` flags.
 
 ## Transcribing To A File
 
-Using the command: ```whisper_mic --loop --dictate``` will type the words you say on your active cursor.
+Using the command: ```python -m whisper_mic --loop --dictate``` will type the words you say on your active cursor.
 
 ## Usage In Other Projects
 
