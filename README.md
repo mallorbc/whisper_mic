@@ -1,4 +1,5 @@
 # Whisper Mic
+
 This repo is based on the work done [here](https://github.com/openai/whisper) by OpenAI.  This repo allows you use use a mic as demo. This repo copies some of the README from the original project.
 
 ## Video Tutorial
@@ -20,8 +21,7 @@ Now a pip package!
 
 ## Available models and languages
 
-There are five model sizes, four with English-only versions, offering speed and accuracy tradeoffs. Below are the names of the available models and their approximate memory requirements and relative speed. 
-
+There are five model sizes, four with English-only versions, offering speed and accuracy tradeoffs. Below are the names of the available models and their approximate memory requirements and relative speed.
 
 |  Size  | Parameters | English-only model | Multilingual model | Required VRAM | Relative speed |
 |:------:|:----------:|:------------------:|:------------------:|:-------------:|:--------------:|
@@ -35,13 +35,15 @@ For English-only applications, the `.en` models tend to perform better, especial
 
 ## Microphone Demo
 
-You can use the model with a microphone using the ```whisper_mic``` program.  Use ```-h``` to see flag options.
+You can use the model with a microphone using the ```whisper_mic``` program.  Use ```--help``` to see flag options.
+
+> Example: ```python -m whisper_mic --help```
 
 Some of the more important flags are the ```--model``` and ```--english``` flags.
 
 ## Transcribing To A File
 
-Using the command: ```whisper_mic --loop --dictate``` will type the words you say on your active cursor.
+Using the command: ```python -m whisper_mic --loop --dictate``` will type the words you say on your active cursor.
 
 ## Usage In Other Projects
 
@@ -60,16 +62,20 @@ Check out what the possible arguments are by looking at the ```cli.py``` file
 ## Troubleshooting
 
 If you are having issues, try the following:
-```
+
+```bash
 sudo apt install portaudio19-dev python3-pyaudio
 ```
 
 ## Contributing
 
 Some ideas that you can add are:
+
 1. Supporting different implementations of Whisper
 2. Adding additional optional functionality.
 3. Add tests
+
+Be sure to run ```pre-commit install``` before making any changes and running it before committing with ```pre-commit run --all-files```.
 
 ## License
 
@@ -78,4 +84,5 @@ The model weights of Whisper are released under the MIT License. See their repo 
 This code under this repo is under the MIT license.  See [LICENSE](LICENSE) for further details.
 
 ## Thanks
+
 Until recently, access to high performing speech to text models was only available through paid serviecs.  With this release, I am excited for the many applications that will come.
