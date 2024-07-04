@@ -35,8 +35,7 @@ class WhisperMic:
         self.english = english
         self.keyboard = pynput.keyboard.Controller()
 
-        self.platform = platform.system()
-
+        self.platform = platform.system().lower()
         if self.platform == "darwin":
             if device == "mps":
                 self.logger.warning("Using MPS for Mac, this does not work but may in the future")
@@ -191,6 +190,9 @@ class WhisperMic:
             if self.save_file:
                 # os.remove(audio_data)
                 self.file.write(predicted_text)
+        else:
+            # If the audio is not loud enough, we put None in the queue to indicate that we need to listen again
+            self.result_queue.put_nowait(None)
 
     async def listen_loop_async(self, dictate: bool = False, phrase_time_limit=None) -> None:
         for result in self.listen_continuously(phrase_time_limit=phrase_time_limit):
@@ -202,10 +204,11 @@ class WhisperMic:
 
     def listen_loop(self, dictate: bool = False, phrase_time_limit=None) -> None:
         for result in self.listen_continuously(phrase_time_limit=phrase_time_limit):
-            if dictate:
-                self.keyboard.type(result)
-            else:
-                print(result)
+            if result is not None:
+                if dictate:
+                    self.keyboard.type(result)
+                else:
+                    print(result)
 
 
     def listen_continuously(self, phrase_time_limit=None):
@@ -222,7 +225,14 @@ class WhisperMic:
         self.__listen_handler(timeout, phrase_time_limit)
         while True:
             if not self.result_queue.empty():
-                return self.result_queue.get()
+                result = self.result_queue.get()
+                if result is None:
+                    self.logger.info("Too quiet, listening again...")
+                    result = self.listen(timeout, phrase_time_limit)
+                    return result
+                else:
+
+                    return result
 
 
     # This method is similar to the listen() method, but it has the ability to listen for a specified duration, mentioned in the "duration" parameter.
