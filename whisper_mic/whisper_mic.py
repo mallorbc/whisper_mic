@@ -220,18 +220,17 @@ class WhisperMic:
             yield self.result_queue.get()
 
             
-    def listen(self, timeout = None, phrase_time_limit=None):
+    def listen(self, timeout = None, phrase_time_limit=None,try_again=True):
         self.logger.info("Listening...")
         self.__listen_handler(timeout, phrase_time_limit)
         while True:
             if not self.result_queue.empty():
                 result = self.result_queue.get()
-                if result is None:
+                if result is None and try_again:
                     self.logger.info("Too quiet, listening again...")
-                    result = self.listen(timeout, phrase_time_limit)
+                    result = self.listen(timeout=timeout, phrase_time_limit=phrase_time_limit,try_again=True)
                     return result
                 else:
-
                     return result
 
 
