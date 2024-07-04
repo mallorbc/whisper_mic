@@ -8,6 +8,7 @@ import time
 import tempfile
 import platform
 import pynput.keyboard
+from typing import Optional
 # from ctypes import *
 
 from whisper_mic.utils import get_logger
@@ -35,15 +36,15 @@ class WhisperMic:
         self.english = english
         self.keyboard = pynput.keyboard.Controller()
 
-        self.platform = platform.system()
-
+        self.platform = platform.system().lower()
         if self.platform == "darwin":
-            if device == "mps":
-                self.logger.warning("Using MPS for Mac, this does not work but may in the future")
-                device = "mps"
-                device = torch.device(device)
+            if device == "cuda" or device == "mps":
+                self.logger.warning("CUDA is not supported on MacOS and mps does not work. Using CPU instead.")
+            device = "cpu"
+        else:
+            device = "cuda" if torch.cuda.is_available() else "cpu"
 
-        if (model != "large" and model != "large-v2") and self.english:
+        if (model != "large" and model != "large-v2" and model!= "large-v3") and self.english:
             model = model + ".en"
 
         model_root = os.path.expanduser(model_root)
@@ -102,7 +103,7 @@ class WhisperMic:
         else:
             return torch.from_numpy(np.frombuffer(data, np.int16).flatten().astype(np.float32) / 32768.0),is_audio_loud_enough
         
-    def is_audio_loud_enough(self, frame):
+    def is_audio_loud_enough(self, frame) -> bool:
         audio_frame = np.frombuffer(frame, dtype=np.int16)
         amplitude = np.mean(np.abs(audio_frame))
         return amplitude > self.hallucinate_threshold
@@ -137,7 +138,7 @@ class WhisperMic:
 
 
     # This method is similar to the __listen_handler() method but it has the added ability for recording the audio for a specified duration of time
-    def __record_handler(self, duration, offset):
+    def __record_handler(self, duration=2, offset=None):
         with self.source as microphone:
             audio = self.recorder.record(source=microphone, duration=duration, offset=offset)
         
@@ -191,8 +192,11 @@ class WhisperMic:
             if self.save_file:
                 # os.remove(audio_data)
                 self.file.write(predicted_text)
+        else:
+            # If the audio is not loud enough, we put None in the queue to indicate that we need to listen again or return None
+            self.result_queue.put_nowait(None)
 
-    async def listen_loop_async(self, dictate: bool = False, phrase_time_limit=None) -> None:
+    async def listen_loop_async(self, dictate: bool = False, phrase_time_limit=None) -> Optional[str]:
         for result in self.listen_continuously(phrase_time_limit=phrase_time_limit):
             if dictate:
                 self.keyboard.type(result)
@@ -202,10 +206,11 @@ class WhisperMic:
 
     def listen_loop(self, dictate: bool = False, phrase_time_limit=None) -> None:
         for result in self.listen_continuously(phrase_time_limit=phrase_time_limit):
-            if dictate:
-                self.keyboard.type(result)
-            else:
-                print(result)
+            if result is not None:
+                if dictate:
+                    self.keyboard.type(result)
+                else:
+                    print(result)
 
 
     def listen_continuously(self, phrase_time_limit=None):
@@ -217,21 +222,35 @@ class WhisperMic:
             yield self.result_queue.get()
 
             
-    def listen(self, timeout = None, phrase_time_limit=None):
+    def listen(self, timeout = None, phrase_time_limit=None,try_again=True):
         self.logger.info("Listening...")
         self.__listen_handler(timeout, phrase_time_limit)
         while True:
             if not self.result_queue.empty():
-                return self.result_queue.get()
+                result = self.result_queue.get()
+                if result is None and try_again:
+                    self.logger.info("Too quiet, listening again...")
+                    result = self.listen(timeout=timeout, phrase_time_limit=phrase_time_limit,try_again=True)
+                    return result
+                else:
+                    return result
 
 
     # This method is similar to the listen() method, but it has the ability to listen for a specified duration, mentioned in the "duration" parameter.
-    def record(self, duration=None, offset=None):
+    def record(self, duration=2, offset=None,try_again=True):
         self.logger.info("Listening...")
+        if duration is None:
+            self.logger.warning("Duration not provided, may hang indefinitely.")
         self.__record_handler(duration, offset)
         while True:
             if not self.result_queue.empty():
-                return self.result_queue.get()
+                result = self.result_queue.get()
+                if result is None and try_again:
+                    self.logger.info("Too quiet, listening again...")
+                    result = self.record(duration=duration, offset=offset,try_again=True)
+                    return result
+                else:
+                    return result
 
 
     def toggle_microphone(self) -> None:
