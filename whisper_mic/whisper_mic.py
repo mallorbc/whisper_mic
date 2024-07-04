@@ -38,9 +38,11 @@ class WhisperMic:
 
         self.platform = platform.system().lower()
         if self.platform == "darwin":
-            if device == "mps":
-                self.logger.warning("Trying to use MPS for Mac, this does not work but may in the future...")
-                device = torch.device(device)
+            if device == "cuda" or device == "mps":
+                self.logger.warning("CUDA is not supported on MacOS and mps does not work. Using CPU instead.")
+            device = "cpu"
+        else:
+            device = "cuda" if torch.cuda.is_available() else "cpu"
 
         if (model != "large" and model != "large-v2" and model!= "large-v3") and self.english:
             model = model + ".en"
