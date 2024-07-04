@@ -57,6 +57,7 @@ class WhisperMic:
                 self.faster = True    # Only set the flag if we succesfully imported the library and opened the model.
             except ImportError:
                 self.logger.error("faster_whisper not installed, falling back to whisper")
+                self.logger.info("To install faster_whisper, run 'pip install faster_whisper'")
                 import whisper
                 self.audio_model = whisper.load_model(model, download_root=model_root).to(device)
 
