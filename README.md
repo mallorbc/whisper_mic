@@ -20,7 +20,7 @@ Now a pip package!
 
 ## Available models and languages
 
-There are five model sizes, four with English-only versions, offering speed and accuracy tradeoffs. Below are the names of the available models and their approximate memory requirements and relative speed. 
+There are five model sizes, four with English-only versions, offering speed and accuracy tradeoffs. Below are the names of the available models and their approximate memory requirements and relative speed.
 
 
 |  Size  | Parameters | English-only model | Multilingual model | Required VRAM | Relative speed |
@@ -62,6 +62,11 @@ Check out what the possible arguments are by looking at the ```cli.py``` file
 If you are having issues, try the following:
 ```
 sudo apt install portaudio19-dev python3-pyaudio
+```
+You'll also need the python3-dev for your specific python version...
+example for python 3.10:
+```
+sudo apt-get install python3.10-dev
 ```
 
 ## Contributing

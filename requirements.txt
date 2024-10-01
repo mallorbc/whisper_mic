@@ -1,3 +1,4 @@
+faster-whisper
 numpy
 tqdm
 more-itertools
