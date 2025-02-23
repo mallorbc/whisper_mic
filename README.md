@@ -78,4 +78,4 @@ The model weights of Whisper are released under the MIT License. See their repo 
 This code under this repo is under the MIT license.  See [LICENSE](LICENSE) for further details.
 
 ## Thanks
-Until recently, access to high performing speech to text models was only available through paid serviecs.  With this release, I am excited for the many applications that will come.
+Until recently, access to high performing speech to text models was only available through paid services.  With this release, I am excited for the many applications that will come.
